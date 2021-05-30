@@ -10,7 +10,7 @@
   - Create an OAuth application
 
 <p align="center">
-  <img src="">
+  <img src="https://github.com/CrispenGari/node-backend/blob/main/02_Passport_Auth_OAuth_Strategy/backend/bandicam%202021-05-30%2020-21-46-381.jpg">
 </p>
 
 Installation
@@ -67,6 +67,9 @@ const googleLogin = () => {
 - First of all we need to get some [credentials](https://github.com/settings/developers) from github for developers.
   - Create a new application
   - Get the ClientId and Client secrets
+  <p align="center">
+    <img src="https://github.com/CrispenGari/node-backend/blob/main/02_Passport_Auth_OAuth_Strategy/backend/bandicam%202021-05-30%2020-31-21-739.jpg">
+  </p>
 
 4. Twitter
 
