@@ -13,7 +13,7 @@ export default new FacebookStrategy.Strategy(
   {
     clientID: `${process.env.FACEBOOK_APP_ID}`,
     clientSecret: `${process.env.FACEBOOK_APP_SECRET}`,
-    callbackURL: "http://localhost:3000/auth/facebook/callback",
+    callbackURL: "http://localhost:3001/auth/facebook/callback",
   },
   function (accessToken: any, refreshToken: any, profile: any, cb: any) {
     Users.findOne(
