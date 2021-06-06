@@ -1,6 +1,6 @@
 /*
 Google Passport Strategy
-Docs: 
+Docs: http://www.passportjs.org/packages/passport-google-oauth/
 */
 import Users from "../../models";
 import GoogleStrategy from "passport-google-oauth20";

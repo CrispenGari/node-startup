@@ -15,6 +15,7 @@ const Login = () => {
   const facebookLogin = () => {
     window.open("http://localhost:3001/auth/facebook", "_self");
   };
+
   return (
     <div className="login">
       <h1>Open Authentication</h1>

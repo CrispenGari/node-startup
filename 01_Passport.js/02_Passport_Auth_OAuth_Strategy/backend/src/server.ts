@@ -134,6 +134,17 @@ app.get(
   }
 );
 
+app.get("/auth/yahoo", passport.authenticate("yahoo"));
+
+app.get(
+  "/auth/yahoo/callback",
+  passport.authenticate("yahoo", { failureRedirect: "http://localhost:3000" }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("http://localhost:3000");
+  }
+);
+
 app.get("/", (req, res) => {
   res.status(200).send("Hello world.");
 });

@@ -21,10 +21,6 @@ const User = new mongoose.Schema({
     type: String,
     required: false,
   },
-  yahooId: {
-    type: String,
-    required: false,
-  },
   twitterId: {
     type: String,
     required: false,

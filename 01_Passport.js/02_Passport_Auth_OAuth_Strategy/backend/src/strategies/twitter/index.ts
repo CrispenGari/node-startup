@@ -1,6 +1,6 @@
 /*
 Twitter Passport Strategy
-Docs: 
+Docs: http://www.passportjs.org/packages/passport-twitter/
 */
 import Users from "../../models";
 import TwitterStrategy from "passport-twitter";

@@ -1,7 +1,7 @@
 /*
 GitHub Passport Strategy
 
-Docs: 
+Docs: http://www.passportjs.org/packages/passport-github/
 */
 import GitHubStrategy from "passport-github";
 import Users from "../../models";
