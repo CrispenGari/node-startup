@@ -10,7 +10,7 @@ const Login = () => {
   };
 
   const twitterLogin = () => {
-    window.location.href = "http://127.0.0.1:3001/auth/twitter";
+    window.location.href = "http://localhost:3001/auth/twitter";
   };
   return (
     <div className="login">

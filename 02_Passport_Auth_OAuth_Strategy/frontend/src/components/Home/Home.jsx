@@ -3,13 +3,11 @@ import "./Home.css";
 import Axios from "axios";
 const Home = ({ user }) => {
   const logout = () => {
-    (async () => {
-      await Axios({
-        method: "GET",
-        // withCredentials: true,
-        url: "http://localhost:3001/logout",
-      });
-    })();
+    Axios.get("http://localhost:3001/auth/logout", {
+      withCredentials: true,
+    }).then((res) => {
+      window.location = "http://localhost:3000";
+    });
   };
   return (
     <div className="home">

@@ -9,9 +9,8 @@ import dotenv from "dotenv";
 import connection from "./connections";
 import session from "express-session";
 import cookieParser from "cookie-parser";
-import GoogleStrategy from "passport-google-oauth20";
-import TwitterStrategy from "passport-twitter";
-import GitHubStrategy from "passport-github";
+import { github, twitter, google, facebook } from "./strategies";
+
 import { IUser } from "./types";
 import Users from "./models";
 //============== CONFIGURATIONS =========
@@ -52,21 +51,20 @@ app.use(
     resave: true,
     saveUninitialized: true,
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-      // secure: true,
-      // sameSite: "none",
+      maxAge: 3600000 * 24 * 7 /* 3600000 = hour*/,
+      // secure: true, /* Need to be changed to true when using https://*/
+      sameSite: false,
     },
-    // resave: true,
-    // saveUninitialized: true,
-    // cookie: {
-    //   sameSite: "none",
-    //   // secure: true,
-    //    // One Week
-    // },
   })
 );
 app.use(passport.initialize());
 app.use(passport.session());
+passport.use(google);
+passport.use(twitter);
+passport.use(github);
+passport.use(facebook);
+
+// Serializing and Deserializing User
 
 passport.serializeUser((user: any, done: any) => {
   console.log(user);
@@ -78,38 +76,7 @@ passport.deserializeUser((id: string, done: any) => {
     return done(null, doc);
   });
 });
-// --------------- GOOGLE ---------------
-passport.use(
-  new GoogleStrategy.Strategy(
-    {
-      clientID: `${process.env.GOOGLE_CLIENT_ID}`,
-      clientSecret: `${process.env.GOOGLE_CLIENT_SECRET}`,
-      callbackURL: "http://localhost:3001/auth/google/callback",
-    },
-    (accessToken, refreshToken, profile: any, cb) => {
-      Users.findOne(
-        { googleId: profile.id },
-        async (error: Error, doc: any) => {
-          if (error) {
-            throw error;
-          } else {
-            if (!doc) {
-              const newUser = new Users({
-                googleId: profile.id,
-                username: profile.displayName,
-                provider: profile.provider,
-              });
-              await newUser.save();
-              cb(null, newUser);
-            } else {
-              cb(null, doc);
-            }
-          }
-        }
-      );
-    }
-  )
-);
+//----------------------------- Routes
 app.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile"] })
@@ -125,82 +92,19 @@ app.get(
     res.redirect("http://localhost:3000/");
   }
 );
-// ------------------------ TWITTER ------------
-passport.use(
-  new TwitterStrategy.Strategy(
-    {
-      consumerKey: `${process.env.TWITTER_APP_ID}`,
-      consumerSecret: `${process.env.TWITTER_APP_SECRET}`,
-      callbackURL: "http://127.0.0.1:3001/auth/twitter/callback",
-    },
-    (accessToken: any, refreshToken: any, profile: any, cb: any) => {
-      Users.findOne(
-        { twitterId: profile.id },
-        async (error: Error, doc: any) => {
-          if (error) {
-            throw error;
-          } else {
-            if (!doc) {
-              const newUser = new Users({
-                twitterId: profile.id,
-                username: profile.displayName,
-                provider: profile.provider,
-              });
-              await newUser.save();
-              cb(null, newUser);
-            } else {
-              cb(null, doc);
-            }
-          }
-        }
-      );
-    }
-  )
-);
+
 app.get("/auth/twitter", passport.authenticate("twitter"));
 app.get(
   "/auth/twitter/callback",
   passport.authenticate("twitter", {
-    failureRedirect: "http://127.0.0.1:3000",
+    failureRedirect: "http://localhost:3000",
     session: true,
   }),
   function (req, res) {
-    res.redirect("http://127.0.0.1:3000/");
+    res.redirect("http://localhost:3000");
   }
 );
 
-// -------------------------- GITHUB
-passport.use(
-  new GitHubStrategy.Strategy(
-    {
-      clientID: `${process.env.GITHUB_CLIENT_ID}`,
-      clientSecret: `${process.env.GITHUB_CLIENT_SECRET}`,
-      callbackURL: "http://localhost:3001/auth/github/callback",
-    },
-    (accessToken, refreshToken, profile, cb) => {
-      Users.findOne(
-        { githubId: profile.id },
-        async (error: Error, doc: any) => {
-          if (error) {
-            throw error;
-          } else {
-            if (!doc) {
-              const newUser = new Users({
-                githubId: profile.id,
-                username: profile.displayName,
-                provider: profile.provider,
-              });
-              await newUser.save();
-              cb(null, newUser);
-            } else {
-              cb(null, doc);
-            }
-          }
-        }
-      );
-    }
-  )
-);
 app.get(
   "/auth/github",
   passport.authenticate("github", { scope: ["profile"] })
@@ -216,10 +120,19 @@ app.get(
     res.redirect("http://localhost:3000/");
   }
 );
-// ---------------------- FACEBOOK
 
-// --------------------- Yahoo
-//============== ROUTES ===========
+app.get("/auth/facebook", passport.authenticate("facebook"));
+
+app.get(
+  "/auth/facebook/callback",
+  passport.authenticate("facebook", {
+    failureRedirect: "http://localhost:3000",
+  }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("http://localhost:3000");
+  }
+);
 
 app.get("/", (req, res) => {
   res.status(200).send("Hello world.");
@@ -228,7 +141,7 @@ app.get("/user", (req, res) => {
   console.log("User", req.user);
   res.status(200).send(req.user);
 });
-app.get("/logout", (req, res) => {
+app.get("/auth/logout", (req, res) => {
   req.logOut();
   res.status(200).send("Done");
 });
@@ -236,4 +149,3 @@ app.get("/logout", (req, res) => {
 app.listen(port, () => {
   console.log("Server is running");
 });
-// http://localhost:3000/auth/google
