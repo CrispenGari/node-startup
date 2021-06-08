@@ -10,7 +10,7 @@ GraphQL is a query language for your API, and a server-side runtime for executin
 </p>
 
 <p align="center">
-    <img src="https://graphql.org/img/logo.svg">
+    <img src="https://github.com/CrispenGari/node-backend/blob/main/02_GraphQL/1_qXj7OaspL_nb_TYHM8oeYw.png" width="100%">
 </p>
 
 - [GraphQL](https://graphql.org/)
