@@ -131,20 +131,30 @@ const RootMutationType = new GraphQLObjectType({
       },
     },
     deleteBook: {
-      type: BookType,
+      type: GraphQLList(BookType),
       args: {
         id: { type: GraphQLID },
       },
-      resolve: async (parent, args) => {},
+      resolve: async (parent, args) => {
+        await Book.findByIdAndDelete(args.id);
+        return Book.find({});
+      },
     },
     updateBook: {
       type: BookType,
       args: {
         id: { type: GraphQLID },
-        authorId: { type: GraphQLID },
         name: { type: GraphQLString },
       },
-      resolve: async (parent, args) => {},
+      resolve: async (parent, args) => {
+        await Book.findByIdAndUpdate(
+          { _id: args.id },
+          {
+            name: args.name,
+          }
+        );
+        return Book.findById(args.id);
+      },
     },
     addAuthor: {
       type: AuthorType,
@@ -164,14 +174,25 @@ const RootMutationType = new GraphQLObjectType({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
       },
-      resolve: (parent, args) => {},
+      resolve: async (parent, args) => {
+        await Author.updateOne(
+          { _id: args.id },
+          {
+            name: args.name,
+          }
+        );
+        return Author.findById(args.id);
+      },
     },
     deleteAuthor: {
-      type: AuthorType,
+      type: GraphQLList(AuthorType),
       args: {
         id: { type: GraphQLID },
       },
-      resolve: (parent, args) => {},
+      resolve: async (parent, args) => {
+        await Author.findByIdAndDelete(args.id);
+        return Author.find({});
+      },
     },
   }),
 });

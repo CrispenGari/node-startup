@@ -265,8 +265,115 @@ app.listen(3001, () => console.log("Express GraphQL server running..."));
 
 **Mutation** - mutation just means changing data.
 
-- The `server.js` file will look as follows:
+- The `RootMutationType` in `server.js` file will look as follows:
 
 ```js
+const RootMutationType = new GraphQLObjectType({
+  name: "RootMutation",
+  description: "Root Mutation Type.",
+  fields: () => ({
+    addBook: {
+      type: BookType,
+      args: {
+        authorId: { type: GraphQLID },
+        name: { type: GraphQLString },
+      },
+      resolve: async (parent, args) => {
+        const book = new Book({
+          name: args.name,
+          authorId: args.authorId,
+        });
+        return await book.save();
+      },
+    },
+    deleteBook: {
+      type: GraphQLList(BookType),
+      args: {
+        id: { type: GraphQLID },
+      },
+      resolve: async (parent, args) => {
+        await Book.findByIdAndDelete(args.id);
+        return Book.find({});
+      },
+    },
+    updateBook: {
+      type: BookType,
+      args: {
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+      },
+      resolve: async (parent, args) => {
+        await Book.findByIdAndUpdate(
+          { _id: args.id },
+          {
+            name: args.name,
+          }
+        );
+        return Book.findById(args.id);
+      },
+    },
+    addAuthor: {
+      type: AuthorType,
+      args: {
+        name: { type: GraphQLString },
+      },
+      resolve: async (parent, args) => {
+        const author = new Author({
+          name: args.name,
+        });
+        return await author.save();
+      },
+    },
+    updateAuthor: {
+      type: AuthorType,
+      args: {
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+      },
+      resolve: async (parent, args) => {
+        await Author.updateOne(
+          { _id: args.id },
+          {
+            name: args.name,
+          }
+        );
+        return Author.findById(args.id);
+      },
+    },
+    deleteAuthor: {
+      type: GraphQLList(AuthorType),
+      args: {
+        id: { type: GraphQLID },
+      },
+      resolve: async (parent, args) => {
+        await Author.findByIdAndDelete(args.id);
+        return Author.find({});
+      },
+    },
+  }),
+});
+```
+
+Examples:
 
 ```
+mutation{
+	deleteBook(id: "60c1176516c4dc05d088ba12") {
+    name
+  }
+}
+```
+
+- Delete the book of a given id and return a list of books left in the database.
+
+```
+mutation{
+	updateBook(id: "60c1176516c4dc05d088ba12") {
+    name
+  }
+}
+```
+
+- Update the book of a given id and return a list of books in the database.
+
+* That's all about this one next we are going to move to the frontend REACT APPLICATION and be able to make queries using a react app.
