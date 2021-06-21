@@ -9,6 +9,8 @@ function App() {
   const [passwordRegister, setPasswordRegister] = useState("");
   const [messageRegister, setMessageRegister] = useState("");
   const [messageLogin, setMessageLogin] = useState("");
+  const [passwordConfRegister, setPasswordConfRegister] = useState("");
+  const [emailRegister, setEmailRegister] = useState("");
 
   const [user, setUser] = useState({});
   const displayUser = () => {
@@ -47,6 +49,8 @@ function App() {
         data: {
           username: usernameRegister,
           password: passwordRegister,
+          email: emailRegister,
+          confirmPassword: passwordConfRegister,
         },
         withCredentials: true,
         url: "http://localhost:3001/register",
@@ -86,11 +90,24 @@ function App() {
           onChange={(e) => setUsernameRegister(e.target.value)}
         />
         <input
+          type="email"
+          placeholder="email"
+          value={emailRegister}
+          onChange={(e) => setEmailRegister(e.target.value)}
+        />
+        <input
           type="password"
           placeholder="password"
           value={passwordRegister}
           onChange={(e) => setPasswordRegister(e.target.value)}
         />
+        <input
+          type="password"
+          placeholder="conf password"
+          value={passwordConfRegister}
+          onChange={(e) => setPasswordConfRegister(e.target.value)}
+        />
+
         <p>{messageRegister}</p>
         <button type="submit" onClick={register}>
           Register

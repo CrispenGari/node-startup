@@ -224,22 +224,303 @@ export default Index;
 
 Deleting a book.
 
-```js
+**mutation.js**
 
+```js
+import { gql } from "@apollo/client";
+const DELETE_BOOK_MUTATION = gql`
+  mutation DeleteBook($id: ID) {
+    deleteBook(id: $id) {
+      id
+    }
+  }
+`;
+export { DELETE_BOOK_MUTATION };
 ```
+
+> When creating a mutation note that `$id` is of type `ID` which is very important in the client. Though on the backend we set it to be `Integer.`
+
+Deleting a book when the button is clicked.
+
+**Form/index.jsx**
+
+```jsx
+import React, { useEffect, useRef } from "react";
+import { useMutation } from "@apollo/client";
+import { DELETE_BOOK_MUTATION } from "./mutations";
+const Index = () => {
+  const [deleteBook, {}] = useMutation(DELETE_BOOK_MUTATION);
+  const deleteIdRef = useRef(null);
+  const deleteBookHandler = (e) => {
+    e.preventDefault();
+    deleteBook({
+      variables: {
+        id: deleteIdRef.current.value,
+      },
+    });
+  };
+  return (
+    <>
+      <form className="form">
+        <h1>Delete Book</h1>
+        <input ref={deleteIdRef} type="text" placeholder="book id" />
+        <button onClick={deleteBookHandler}>deleteBook</button>
+      </form>
+    </>
+  );
+};
+export default Index;
+```
+
+Now the book will be deleted. But it won't update books on the client side. So how can we update the books on the client on success delete. Well, we will use the `refetchQueries`.
+
+##### `refetchQueries`
+
+An array or function that allows you to specify which queries you want to refetch after a mutation has occurred. Array values can either be queries (with optional variables) or just the string names of queries to be refeteched.
+So now we want to delete a book and print out the books that are available after a mutaion. **Note that this works even when updating, or adding a book** any mutation this works the same. We are only going to change the `Form/index.tsx` file.
+
+```jsx
+import React, { useEffect, useRef } from "react";
+import { useMutation, gql } from "@apollo/client";
+import { DELETE_BOOK_MUTATION } from "./mutations";
+
+const ALL_BOOKS = gql`
+  {
+    books {
+      name
+      id
+    }
+  }
+`;
+const Index = () => {
+  const [deleteBook, { data, error }] = useMutation(DELETE_BOOK_MUTATION, {
+    refetchQueries: [{ query: ALL_BOOKS }],
+  });
+
+  useEffect(() => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log(data);
+    }
+  }, [data, error]);
+  const deleteIdRef = useRef(null);
+  const deleteBookHandler = (e) => {
+    e.preventDefault();
+    deleteBook({
+      variables: {
+        id: deleteIdRef.current.value,
+      },
+    });
+  };
+  return (
+    <>
+      <form className="form">
+        <h1>Delete Book</h1>
+        <input ref={deleteIdRef} type="text" placeholder="book id" />
+        <button onClick={deleteBookHandler}>deleteBook</button>
+      </form>
+    </>
+  );
+};
+export default Index;
+```
+
+### Credits
+
+- [Blog Post](https://www.apollographql.com/blog/apollo-client/caching/when-to-use-refetch-queries/)
 
 2. Updating
 
-Updating a book
+Mutation that update the book. `mutations.js`
 
 ```js
+import { gql } from "@apollo/client";
 
+const UPDATE_BOOK_MUTATION = gql`
+  mutation updateBook($id: ID, $name: String!) {
+    updateBook(id: $id, name: $name) {
+      name
+      id
+    }
+  }
+`;
+
+export { UPDATE_BOOK_MUTATION };
+```
+
+The full react code that updates a book.
+
+```jsx
+import React, { useEffect, useRef } from "react";
+import { useMutation, gql } from "@apollo/client";
+import { UPDATE_BOOK_MUTATION } from "./mutations";
+
+const ALL_BOOKS = gql`
+  {
+    books {
+      name
+      id
+    }
+  }
+`;
+const Index = () => {
+  const [updateBook, { data, error }] = useMutation(UPDATE_BOOK_MUTATION, {
+    refetchQueries: [{ query: ALL_BOOKS }],
+  });
+  const idRef = useRef(null);
+  const nameRef = useRef(null);
+  useEffect(() => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log(data);
+    }
+  }, [data, error]);
+  const updateBookHandler = (e) => {
+    e.preventDefault();
+    updateBook({
+      variables: {
+        id: idRef.current.value,
+        name: nameRef.current.value,
+      },
+    });
+  };
+  return (
+    <>
+      <form className="form">
+        <h1>Add Book</h1>
+        <input ref={idRef} type="text" placeholder="book id" />
+        <input ref={nameRef} type="text" placeholder="book name" />
+        <button onClick={updateBookHandler}>updateBook</button>
+      </form>
+    </>
+  );
+};
+export default Index;
 ```
 
 3. Adding a book.
 
-```js
+**Mutation for adding a new Book** - mutations.js
 
+```js
+import { gql } from "@apollo/client";
+const ADD_BOOK_MUTATION = gql`
+  mutation AddBook($authorId: ID, $name: String!) {
+    addBook(authorId: $authorId, name: $name) {
+      name
+      id
+    }
+  }
+`;
+export { ADD_BOOK_MUTATION };
 ```
+
+Code that help us to add a new book.
+
+```jsx
+import React, { useEffect, useRef } from "react";
+import { useMutation, gql } from "@apollo/client";
+import { ADD_BOOK_MUTATION, DELETE_BOOK_MUTATION } from "./mutations";
+
+const ALL_BOOKS = gql`
+  {
+    books {
+      name
+      id
+    }
+  }
+`;
+const Index = () => {
+  const [addBook, { data, error }] = useMutation(ADD_BOOK_MUTATION, {
+    refetchQueries: [{ query: ALL_BOOKS }],
+  });
+  const idRef = useRef(null);
+  const nameRef = useRef(null);
+  useEffect(() => {
+    if (error) {
+      console.error(error);
+    } else {
+      console.log(data);
+    }
+  }, [data, error]);
+  const addBookHandler = (e) => {
+    e.preventDefault();
+    addBook({
+      variables: {
+        authorId: idRef.current.value,
+        name: nameRef.current.value,
+      },
+    });
+  };
+  return (
+    <>
+      <form className="form">
+        <h1>Add Book</h1>
+        <input ref={idRef} type="number" placeholder="author id" />
+        <input ref={nameRef} type="text" placeholder="book name" />
+        <button onClick={addBookHandler}>addBook</button>
+      </form>
+    </>
+  );
+};
+export default Index;
+```
+
+We will lastly look at the `client.mutate` function.
+
+### `Client.mutate()`
+
+This functions allows us to make mutations to the server by just calling it. The following code updates the book when a button `mutate` is clicked. This works the same with other mutation such as updating a, deleting ...
+
+```jsx
+import { useEffect, useState } from "react";
+import "./App.css";
+import { ApolloProvider, InMemoryCache, ApolloClient } from "@apollo/client";
+const client = new ApolloClient({
+  uri: "http://localhost:3001/graphql",
+  cache: new InMemoryCache(),
+});
+const ALL_BOOKS = gql`
+  {
+    books {
+      name
+      id
+    }
+  }
+`;
+
+const UPDATE_BOOK = gql`
+  mutation {
+    updateBook(id: "60c8e6ba0fd6000f546a5c1f", name: "TensorFlow 2.0") {
+      name
+      id
+    }
+  }
+`;
+function App() {
+  const { data, error, loading } = useQuery(ALL_BOOKS);
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
+
+  const mutate = () => {
+    client.mutate({
+      mutation: UPDATE_BOOK,
+    });
+  };
+  return (
+    <div className="app">
+      <h1>Books System</h1>
+      <button onClick={mutate}>Mutate</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+This function works the same as the `client.query()`.
 
 - Read more in the [Docs](https://www.apollographql.com/docs/react/get-started/)
