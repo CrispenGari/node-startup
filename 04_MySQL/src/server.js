@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import msql from "mysql2";
 import router from "./routes.js";
 const PORT = 3001 || process.env.PORT;
 const app = express();
