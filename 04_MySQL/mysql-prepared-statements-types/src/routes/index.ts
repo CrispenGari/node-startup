@@ -32,13 +32,17 @@ connection.query("USE users;", (error: mysql.QueryError) =>
   console.log(error ? error : "Database users selected...")
 );
 
+connection.query(
+  "SELECT 'HELLO WORLD!';",
+  (error: mysql.QueryError, res: UserI | null | undefined) => console.log(res)
+);
+
 router.post("/login/user", (req: Request, res: Response) => {
   const { username, password } = req.body;
-
   connection.execute(
     FIND_USER(),
     [username, password],
-    (error: mysql.QueryError, result: any) => {
+    (error: mysql.QueryError, result: UserI | any) => {
       if (error) {
         throw error;
       }
