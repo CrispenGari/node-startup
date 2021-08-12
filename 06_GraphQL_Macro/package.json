@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "scripts": {
+    "watch": "tsc -w",
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon dist/server.js"
+  },
+  "dependencies": {
+    "@mikro-orm/cli": "^4.5.7",
+    "@mikro-orm/core": "^4.5.7",
+    "@mikro-orm/migrations": "^4.5.7",
+    "@mikro-orm/postgresql": "^4.5.7",
+    "@types/node": "^16.6.0",
+    "pg": "^8.7.1",
+    "ts-node": "^10.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.5"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
+  }
+}
