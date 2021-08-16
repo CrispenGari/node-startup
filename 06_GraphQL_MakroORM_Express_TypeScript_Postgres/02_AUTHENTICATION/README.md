@@ -1,481 +1,639 @@
-### Basic CRUD Operations in Express, GraphQL, Mikro ORM and TypeScript.
+### Authentication
 
-### Creating a project.
+We are going to implement authentication using `graphql`, `mikroORM`, `postgres` and `express`. We will work from start to finish on the implementation of the backend authentication. We are going to use the `CRUD` operation simple todo application as the base and move on to creating some advanced resolvers along the way.
 
-1. Creating a `package.json` file
+### Dev Tools
 
-```
-yarn init -y
-```
+Let's install a beautiful graphQL play ground extension on our chrome browser. The extension can be found [here](https://chrome.google.com/webstore/detail/graphql-playground-for-ch/kjhjcgclphafojaeeickcokfbhlegecd?hl=en)
 
-2. Install node types
+### Starting the Postgres database server
 
 ```
-yarn add @types/node
+psql -U postgres
 ```
 
-3. Creating `scripts`.
+### Creating a new database called users
+
+This database will be responsible for storing all the users information.
 
 ```
-yarn add ts-node
+CREATE DATABASE users;
 ```
 
-4. Installing typescript.
+### Selecting a database
 
 ```
-yarn add -D typescript
+postgres=# \c users;
 ```
 
-5. Creating a `tsconfig.json`
-   The docs can be found [here](https://github.com/CrispenGari/tsconfig.json)
+### Package installation
 
-```
-npx ts-config-files.json
-```
+We are going to use the packages that we installed from the previous example in this example. We are going to add others as we go.
 
-In the package.json file we are going to add the following under scripts:
+### Creating a `User` entity.
 
-```json
-{
-  "start": "ts-node src/server.ts"
-}
-```
-
-This script will just run the `server.ts` file that is in the `src` folder. **But the problem is that it is slow.** So what can we do to improve this. We will create a new script called `watch`.
-
-```json
-{
-  "watch": "tsc -w"
-}
-```
-
-The `watch` will watch any changes in our files and create a new `dist` folder with a `server.js`. So every-time we save a file the dist folder will be recreated. So to execute the file created in the terminal we have to run the following command.
-
-```
-node dist/server.js
-```
-
-- But this is kind boring because we want to start restart the server as soon as we save the file, for that we can use a package called `nodemon` this will watch all our changes. So we will add a new script called `"dev"`:
-
-```json
-{
-  "dev": "nodemon dist/server.js"
-}
-```
-
-**Keep in mind that the watch script should always run in the background even we are using `nodemon`.**
-
-If you want `nodemon` to watch typescript you will add the following command in the package.json. We are not going to use it since it is kinda slow.
-
-```json
-{
-  "dev": "nodemon --exec ts-node src/server.ts"
-}
-```
-
-### Setting up Mikro-ORM and PostgreSQL
-
-Note that according to the docs you can use mikro-orm with any database you want.
-
-1. Installation
-   Installing:
-   a. `@mikro-orm/cli`- Command Line Interface
-   b. `@mikro-orm/migtations`
-   c. `ps`- Postgres
-   d. `@mikro-orm/postgresql`- Postgres
-   e. `@mikro-orm/core`- Postgres
-
-```
-yarn add @mikro-orm/cli @mikro-orm/migrations @mikro-orm/core @mikro-orm/postgresql pg
-```
-
-2. Creating a database.
-   Open `psql` and run the following command.
-
-```
-CREATE DATABASE todo;
-```
-
-3. Creating an Entity
-   We are going to create a simple todo applications so all our entities will be in the `src/entities`. Our first entity Todo will look as follows:
+We are going to create a user `entity` in the `entities` folder in the `src`.
 
 ```ts
 import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
 
 @Entity()
-export class Todo {
+export class User {
   @PrimaryKey()
   id: number;
 
   @Property({ type: "date" })
   createdAt = new Date();
 
-  @Property({ type: "date", onUpdate: () => new Date() })
-  updatedAt = new Date();
+  @Property({ type: "text", nullable: false })
+  password: string;
 
-  @Property({ type: "text" })
-  title!: string;
-  @Property({ type: "boolean", default: false })
-  completed!: boolean;
+  @Property({ type: "text", unique: true, nullable: false })
+  username: string;
+
+  @Property({ type: "text", nullable: false })
+  email: string;
 }
 ```
 
-4. We will then configure our application for migrations. First of all we need to go to the `package.json` and add the following to it:
-
-```json
-...
- "mikro-orm": {
-    "useTsNode": true,
-    "configPaths": [
-      "./src/mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
-  }
-```
-
-5. We will then create a `mikro-orm.config.ts` and add the following code to it:
+The `mikro-orm.config.ts` will be looking as follows:
 
 ```ts
 import { MikroORM } from "@mikro-orm/core";
-import { Todo } from "./entities/Todo";
 import path from "path";
+import { User } from "./entities/User";
 export default {
-  entities: [Todo],
+  entities: [User],
   migrations: {
     path: path.join(__dirname, "./migrations"),
     pattern: /^[\w-]+\d+\.[t|j]s$/,
+    tableName: "users",
   },
-  dbName: "todo",
+  dbName: "users",
   password: "root",
   user: "postgres",
   port: 5432,
   debug: process.env.NODE_ENV !== "production",
   type: "postgresql",
 } as Parameters<typeof MikroORM.init>[0];
-// as const
 ```
 
-6. Our `server.ts` will look as follows
+Then the `server.ts` will be looking as follows:
 
 ```ts
 import { MikroORM } from "@mikro-orm/core";
-import { Todo } from "./entities/Todo";
+import { User } from "./entities/User";
 import mikroOrmConfig from "./mikro-orm.config";
+
 const main = async () => {
   const orm = await MikroORM.init(mikroOrmConfig);
-  const todo = orm.em.create(Todo, {
-    title: "Cleaning",
+  await orm.getMigrator().up();
+  const user = orm.em.create(User, {
+    username: "crispen",
+    email: "crispen@gmail.com",
+    password: "crispen",
   });
-  await orm.em.persistAndFlush(todo);
+  await orm.em.persistAndFlush(user);
 };
 
-main().catch((err) => console.log(err));
+main()
+  .then(() => {})
+  .catch((error) => console.error(error));
 ```
 
-7. Now to run migration we can either use the `cli` by doing the following:
+### Running migrations
+
+To run migration we are going to run the following command:
 
 ```
 npx mikro-orm migration:create
 ```
 
-- All the command can be found in the [docs](https://mikro-orm.io/docs/migrations/#using-via-cli)
+- Since we are going to have more migrations it's good to create a script that will run a migration. For that I'm going to jump into my `package.json` file and under `scripts` I'm going to add the following script:
 
-  We want migrations automatically by changing the `server.ts` to look as follows using the `orm.getMigrator().up()`
+```json
+ "scripts": {
+    ...
+    "create:migration": "mikro-orm migration:create"
+  }
+```
+
+Now when you want to run a migration you just have to run the following command:
+
+```
+yarn create:migration
+```
+
+> Everything is working now, we need to set up the graphql server. We are going to use the `apollo-server-express` and `type-graphql`. And our resolvers will be in the `resolvers` folders.
+
+1. `User` entity:
+   The user entity will be looking as follows for now.
 
 ```ts
-import { MikroORM } from "@mikro-orm/core";
-import { Todo } from "./entities/Todo";
-import mikroOrmConfig from "./mikro-orm.config";
-const main = async () => {
-  const orm = await MikroORM.init(mikroOrmConfig);
-  await orm.getMigrator().up();
-  const todo = orm.em.create(Todo, {
-    title: "Cleaning",
-  });
-  await orm.em.persistAndFlush(todo);
-};
-main().catch((err) => console.log(err));
+import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
+import { Field, Int, ObjectType } from "type-graphql";
+
+@ObjectType()
+@Entity()
+export class User {
+  @Field(() => Int)
+  @PrimaryKey()
+  id: number;
+
+  @Field(() => String)
+  @Property({ type: "date" })
+  createdAt = new Date();
+
+  //   @Field(() => String)
+  @Property({ type: "text", nullable: false })
+  password!: string;
+
+  @Field(() => String)
+  @Property({ type: "text", unique: true, nullable: false })
+  username!: string;
+
+  @Field(() => String)
+  @Property({ type: "text", nullable: false })
+  email!: string;
+}
 ```
 
-### Setting up the `GraphQL` - `Express` server.
-
-1. Installation
+2. Now it's time to create our resolvers. The first thing that we have to do is to create a mutation that will be able to register the user. The mutation will be called `register`. We don't want to save the user's password as plain text therefore we are going to use a hashing algorithm called `argon2` which can be found [here](https://github.com/ranisalt/node-argon2). WE can also use `bcrypt` but `argon2` is better. We need to install it first so to install it we are going to run the following command:
 
 ```
-yarn add express graphql apollo-server-express type-graphql
+yarn add argon2
+<!-- Types -->
+yarn add -D @types/argon2
 ```
 
-2. Installation of express types
+1. Registering a user `user` resolver.
 
-```
-yarn add -D @types/express
-```
+- We are going to create a UserInput type by decorating the `UserInput` with the `InputType` from `type-graphql`. This will allow us to write cleaner code. Instead of passing a lot of `Arg`s for each field we are now passing a single `Arg` as an object of type `UserInput`
 
-3. Installation of `reflect-metadata`
-   This should be added at the top of in the server.ts it is required with `type-graphql`
+- We are going to create `UserResponse` which returns two things an object of `error` or `user`. The `Error` type will be an `ObjectType` with two fields `name` and `message`. All these fields are not optional.
 
-```
-yarn add reflect-metadata
-```
-
-4. We are going to create a simple express application and use the `ApolloServer` to create our `graphql` server. The `server.ts` now is looking as follows:
+- **Note** - `InputTypes` are for `Arg` and `ObjectTypes` are for `Mutation` and `Queries` return types.
 
 ```ts
-import { MikroORM } from "@mikro-orm/core";
-import mikroOrmConfig from "./mikro-orm.config";
-import express from "express";
-import { __port__ } from "./constants";
-import { ApolloServer } from "apollo-server-express";
-import { buildSchema } from "type-graphql";
-import { HelloResolver } from "./resolvers/hello";
-const main = async () => {
-  // Database connection and running latest migrations
-  const orm = await MikroORM.init(mikroOrmConfig);
-  await orm.getMigrator().up();
+import { Arg, Ctx, Field, InputType, Mutation, Resolver } from "type-graphql";
+import { User } from "../entities/User";
+import { UserContext } from "../types";
+import argon2 from "argon2";
 
-  // Creating the express application instance
-  const app: express.Application = express();
+@InputType()
+class UserInput {
+  @Field(() => String)
+  username!: string;
 
-  // Routes
-  app.get("/", (_req: express.Request, res: express.Response) => {
-    res.status(200).json({
-      name: "backend",
-      techs: "GraphQL, Express, MakroORM and PostgreSQL",
+  @Field(() => String)
+  email!: string;
+
+  @Field(() => String)
+  password!: string;
+}
+
+@ObjectType()
+class Error {
+  @Field(() => String)
+  name: string;
+
+  @Field(() => String)
+  message: string;
+}
+
+@ObjectType()
+class UserResponse {
+  @Field(() => User, { nullable: true })
+  user?: User;
+
+  @Field(() => Error, { nullable: true })
+  error?: Error;
+}
+
+@Resolver()
+export class UserResolver {
+  // REGISTER
+  @Mutation(() => UserResponse)
+  async register(
+    @Ctx() { em }: UserContext,
+    @Arg("user", () => UserInput, { nullable: true }) user: UserInput
+  ): Promise<UserResponse | null> {
+    if (user.username.length <= 3) {
+      return {
+        error: {
+          message: "username must have at least 3 characters",
+          name: "username",
+        },
+      };
+    }
+    if (user.password.length <= 3) {
+      return {
+        error: {
+          message: "password must have at least 3 characters",
+          name: "password",
+        },
+      };
+    }
+    const hashed = await argon2.hash(user.password);
+    const _user = em.create(User, {
+      email: user.email.toLocaleLowerCase(),
+      password: hashed,
+      username: user.username.toLocaleLowerCase(),
     });
-  });
-  // GraphQL server
-  const apolloServer = new ApolloServer({
-    schema: await buildSchema({
-      resolvers: [HelloResolver], // Resolvers contains query and mutations
-      validate: false,
-    }),
-  });
-  await apolloServer.start();
-  apolloServer.applyMiddleware({ app });
-  app.listen(__port__, () => {
-    console.log("The server has started at port: %s", __port__);
-  });
-};
+    try {
+      await em.persistAndFlush(_user);
+    } catch (error) {
+      if (
+        error.code === "23505" ||
+        String(error.detail).includes("already exists")
+      ) {
+        return {
+          error: {
+            message: "username is taken by someone else",
+            name: "username",
+          },
+        };
+      }
+    }
 
-main().catch((err) => console.log(err));
-```
-
-The hello world resolver looks as follows in the file `resolvers/hello.ts`:
-
-```ts
-import { Query, Resolver } from "type-graphql";
-@Resolver()
-export class HelloResolver {
-  @Query(() => String)
-  hello() {
-    return "hello world!";
+    return { user: _user };
   }
 }
 ```
 
-Now back to our application we want to create a simple `CRUD` application of todos. We are going to create our resolver in the `resolvers/todo.ts` as follows:
+- Now if i go to the `graphQL` playground and make the following mutation:
 
-```ts
-import { Todo } from "../entities/Todo";
-import { TodoContext } from "../types";
-import { Ctx, Query, Resolver } from "type-graphql";
-
-@Resolver()
-export class TodoResolver {
-  @Query(() => [Todo])
-  todos(@Ctx() ctx: TodoContext): Promise<Todo[]> {
-    return ctx.em.find(Todo, {});
+```
+mutation{
+  register(user:{username: "gari", password: "gari", email: "gari@gmail.com"}) {
+    username
+    email
+    createdAt
   }
 }
 ```
 
-We will recieve the `ctx` that we will pass down to resolvers in the server.ts file during the creation of the `apolloServer` instance. We are explicitly setting types, the Query type will return arrays of `Todos`. The `TodoContext` is the type of `em` object we have passed down to resolvers. Using this `em` object we can now do database stuff using `mikro ORM`. The `TodoContext` is a type that is located in the `types/index.ts` file which looks as follows:
+I will get a new registered user
 
-```ts
-import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
-export type TodoContext = { em: EntityManager<IDatabaseDriver<Connection>> };
+```json
+{
+  "data": {
+    "register": {
+      "username": "gari",
+      "email": "gari@gmail.com",
+      "createdAt": "1629138210930"
+    }
+  }
+}
 ```
+
+2. Login a `user` resolver.
+   We are going to make this very simple and straight forward when it comes to login the user. We are going to use the `username` and `password` note that you can use both username and password to login the user. If you go to the graphQL playground and make the following mutation:
+
+```
+mutation{
+ login (user: {username: "gari", password: "gari"}){
+   user {
+     email,
+     username
+     createdAt
+     id
+   }
+   error {
+     message
+     name
+   }
+ }
+}
+```
+
+You will get the following response:
+
+```json
+{
+  "data": {
+    "login": {
+      "user": {
+        "email": "gari@gmail.com",
+        "username": "gari",
+        "createdAt": "1629138211000",
+        "id": 6
+      },
+      "error": null
+    }
+  }
+}
+```
+
+> Now that we are able to login the `user` and creating a user, the next step is to make sure that we keep the user login in. We are going to use store the user session in the browser. T do this we are going to use `express-session` and `redis`. We are going to use the `connect-redis` [middleware](https://github.com/tj/connect-redis) and the [express session](https://github.com/expressjs/session) middleware. So let's install those packages:
+
+### Installation of `connect-redis`, `redis` and `express-session`
+
+```
+yarn add redis connect-redis express-session
+<!-- Add types -->
+yarn add -D @types/redis @types/connect-redis  @types/express-session
+```
+
+### Staring the redis server.
+
+To start the redis server run the following command.
+
+```
+$ redis-server
+```
+
+Once the server is running we are going to setup the express-session middleware in the `server.ts` The code looks as follows:
 
 ```ts
 import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import mikroOrmConfig from "./mikro-orm.config";
-import express from "express";
-import { __port__ } from "./constants";
+import express, { Application, Response, Request } from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
+import { __port__ } from "./constants";
 import { HelloResolver } from "./resolvers/hello";
-import { TodoResolver } from "./resolvers/todo";
+import { UserResolver } from "./resolvers/user";
+
+import redis from "redis";
+import session from "express-session";
+import connectRedis from "connect-redis";
+
 const main = async () => {
-  // Database connection and running latest migrations
   const orm = await MikroORM.init(mikroOrmConfig);
   await orm.getMigrator().up();
 
-  const app: express.Application = express();
+  const app: Application = express();
 
-  // Routes
-  app.get("/", (_req: express.Request, res: express.Response) => {
-    res.status(200).json({
-      name: "backend",
-      techs: "GraphQL, Express, MakroORM and PostgreSQL",
-    });
+  const RedisStore = connectRedis(session);
+  const redisClient = redis.createClient();
+
+  app.use(
+    session({
+      store: new RedisStore({ client: redisClient, disableTouch: true }),
+      saveUninitialized: false,
+      secret: "secret",
+      resave: false,
+      name: "user",
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+        httpOnly: true,
+        secure: false, // https when true
+        sameSite: "lax",
+      },
+    })
+  );
+  /*
+  Since it is a graphql server we are don't care
+  about other routes.
+  */
+  app.get("/", (_req: Request, res: Response) => {
+    return res.status(200).redirect("/graphql");
   });
-  // GraphQL server
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, TodoResolver],
       validate: false,
+      resolvers: [HelloResolver, UserResolver],
     }),
-    context: () => ({ em: orm.em }),
+    context: ({ req, res }) => ({ em: orm.em, req, res }),
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({ app });
-  app.listen(__port__, () => {
-    console.log("The server has started at port: %s", __port__);
-  });
+  app.listen(__port__, () =>
+    console.log("The server has started at port: %d", __port__)
+  );
 };
 
-main().catch((err) => console.log(err));
+main()
+  .then(() => {})
+  .catch((error) => console.error(error));
 ```
 
-1. `context`- we are passing down the context that will be used by resolvers. In our case we are going to use the mikroORM `em` object. We will pass it down to the resolvers.
+- First we imported `redis`, `express-session` and `connect-redis`. We will then create a redis store and create a session of name `user` that expires after 10 years. **Make sure that the `session` middleware comes before `apolloServer.applyMiddleware({app})`**.
 
-> We also have to go to the `Todo` entity and explicitly set the types. So our `entities/Todo` will look as follows.
+- We also changed the context in the `ApolloServer` instance and pass down `req` and `res` objects to our resolvers. We also changed the type of `UserContext` in the `types/index.ts` and it's now looking as follows:
 
 ```ts
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
-import { Field, Int, ObjectType } from "type-graphql";
+import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
+import express from "express";
+export type UserContext = {
+  em: EntityManager<IDatabaseDriver<Connection>>;
+  req: express.Request & { session?: any };
+  res: express.Response;
+};
+```
+
+- Now in the `user` resolver. On sucessiful authentication we set the push the userId to the session as follows:
+
+```ts
+req.session.userId = _userFound.id;
+```
+
+- Now our login Mutation will be looking as follows:
+
+```ts
+ @Mutation(() => UserResponse)
+  async login(
+    @Ctx() { em, req }: UserContext,
+    @Arg("user", () => UserInput, { nullable: true }) user: UserInput
+  ): Promise<UserResponse | null> {
+    const _userFound = await em.findOne(User, {
+      username: user.username.toLocaleLowerCase(),
+    });
+    if (!_userFound) {
+      return {
+        error: {
+          message: "username does not exists",
+          name: "username",
+        },
+      };
+    }
+    const compare = await argon2.verify(_userFound?.password, user?.password);
+    if (!Boolean(compare)) {
+      return {
+        error: {
+          name: "password",
+          message: "invalid password",
+        },
+      };
+    } else {
+      req.session.userId = _userFound.id; // add the userid to the session.
+      return { user: _userFound };
+    }
+  }
+```
+
+- Next we will then create a new mutation that will get the user if he's logged in the `user` resolver as follows.
+
+```ts
+  @Query(() => User, { nullable: true })
+  async user(@Ctx() { em, req }: UserContext): Promise<User | null> {
+    if (!req.session.userId) {
+      return null;
+    }
+    const user = await em.findOne(User, {
+      id: req.session.userId,
+    });
+    return user;
+  }
+```
+
+### The code that we have so far in the `user` resolver:
+
+The following is the code that we have so far in our `user` resolver. Next we are going to implement the logout.
+
+````ts
+import {
+  Arg,
+  Ctx,
+  Field,
+  InputType,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+} from "type-graphql";
+import { User } from "../entities/User";
+import { UserContext } from "../types";
+import argon2 from "argon2";
+
+@InputType()
+class UserInput {
+  @Field(() => String)
+  username!: string;
+
+  @Field(() => String, { nullable: true })
+  email!: string;
+
+  @Field(() => String)
+  password!: string;
+}
 
 @ObjectType()
-@Entity()
-export class Todo {
-  @Field(() => Int)
-  @PrimaryKey()
-  id: number;
+class Error {
+  @Field(() => String)
+  name: string;
 
   @Field(() => String)
-  @Property({ type: "date" })
-  createdAt = new Date();
-
-  @Field(() => String)
-  @Property({ type: "date", onUpdate: () => new Date() })
-  updatedAt = new Date();
-
-  @Field()
-  @Property({ type: "text" })
-  title!: string;
-
-  @Field(() => Boolean)
-  @Property({ type: "boolean", default: false })
-  completed!: boolean;
+  message: string;
 }
-```
 
-- Now if you go to this route `http://localhost:3001/graphql/` and make the following graphQL query:
+@ObjectType()
+class UserResponse {
+  @Field(() => User, { nullable: true })
+  user?: User;
 
-```
-{
- todos {
-   completed,
-   createdAt,
-   title,
-   updatedAt
- }
+  @Field(() => Error, { nullable: true })
+  error?: Error;
 }
-```
 
-You will get:
-
-```json
-{
-  "data": {
-    "todos": [
-      {
-        "completed": false,
-        "createdAt": "1628799420000",
-        "title": "Cleaning",
-        "updatedAt": "1628799420000"
-      },
-      {
-        "completed": false,
-        "createdAt": "1628799705000",
-        "title": "Cleaning",
-        "updatedAt": "1628799705000"
+@Resolver()
+export class UserResolver {
+  // GET USER
+  @Query(() => User, { nullable: true })
+  async user(@Ctx() { em, req }: UserContext): Promise<User | null> {
+    if (!req.session.userId) {
+      return null;
+    }
+    const user = await em.findOne(User, {
+      id: req.session.userId,
+    });
+    return user;
+  }
+  // REGISTER
+  @Mutation(() => UserResponse)
+  async register(
+    @Ctx() { em, req }: UserContext,
+    @Arg("user", () => UserInput, { nullable: true }) user: UserInput
+  ): Promise<UserResponse | null> {
+    if (user.username.length <= 3) {
+      return {
+        error: {
+          message: "username must have at least 3 characters",
+          name: "username",
+        },
+      };
+    }
+    if (user.password.length <= 3) {
+      return {
+        error: {
+          message: "password must have at least 3 characters",
+          name: "password",
+        },
+      };
+    }
+    const hashed = await argon2.hash(user.password);
+    const _user = em.create(User, {
+      email: user.email.toLocaleLowerCase(),
+      password: hashed,
+      username: user.username.toLocaleLowerCase(),
+    });
+    try {
+      await em.persistAndFlush(_user);
+    } catch (error) {
+      if (
+        error.code === "23505" ||
+        String(error.detail).includes("already exists")
+      ) {
+        return {
+          error: {
+            message: "username is taken by someone else",
+            name: "username",
+          },
+        };
       }
-    ]
+    }
+    req.session.userId = _user.id;
+    return { user: _user };
   }
-}
-```
 
-Next we will modify our `TodoResolver` and make queries for a single todo and do some mutations.
+  // LOGIN
+  @Mutation(() => UserResponse)
+  async login(
+    @Ctx() { em, req }: UserContext,
+    @Arg("user", () => UserInput, { nullable: true }) user: UserInput
+  ): Promise<UserResponse | null> {
+    const _userFound = await em.findOne(User, {
+      username: user.username.toLocaleLowerCase(),
+    });
+    if (!_userFound) {
+      return {
+        error: {
+          message: "username does not exists",
+          name: "username",
+        },
+      };
+    }
+    const compare = await argon2.verify(_userFound?.password, user?.password);
+    if (!Boolean(compare)) {
+      return {
+        error: {
+          name: "password",
+          message: "invalid password",
+        },
+      };
+    } else {
+      req.session.userId = _userFound.id;
+      return { user: _userFound };
+    }
+  }
+}```
+````
+
+The logout will be much simpler all we need to do is to destroy the session. The mutation looks as follows:
 
 ```ts
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
-import { Field, Int, ObjectType } from "type-graphql";
-
-@ObjectType()
-@Entity()
-export class Todo {
-  @Field(() => Int)
-  @PrimaryKey()
-  id: number;
-
-  @Field(() => String)
-  @Property({ type: "date" })
-  createdAt = new Date();
-
-  @Field(() => String)
-  @Property({ type: "date", onUpdate: () => new Date() })
-  updatedAt = new Date();
-
-  @Field()
-  @Property({ type: "text" })
-  title: string;
-
-  @Field(() => Boolean)
-  @Property({ type: "boolean", default: false })
-  completed!: boolean;
-}
-```
-
-- After updating the `TodoResolver` we are now able to do the `CRUD` operations using GraphQL, PostgreSQL and MikroORM. If you go to the graphql playground you will be able to make mutations and queries that are similar to the ones that follow:
-
-```
-# Adding a new todo
-mutation{
-  addTodo(title: "Hello world") {
-    title,
-    id,
-    completed,
-    createdAt,
-    updatedAt
+ @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: UserContext): Promise<boolean> {
+    return new Promise((resolved, rejection) => {
+      req.session.destroy((error: any) => {
+        res.clearCookie('user')
+        if (error) {
+          return rejection(false);
+        }
+        return resolved(true);
+      });
+    });
   }
-}
-# Updating a specific todo
-mutation{
-  updateTodo(title: "Goodbye World", id: 3) {
-    title,
-    id,
-    completed,
-    createdAt,
-    updatedAt
-  }
-}
-
-# Deleting a specific todo
-mutation{
-  deleteTodo(id:2)
-}
-
-# Querying all todos
-{
-  todos {
-    id
-    title
-  }
-}
 ```
-
-### References
-
-- [mikro-orm](https://mikro-orm.io/docs/i)

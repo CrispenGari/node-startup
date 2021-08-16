@@ -1,39 +1,62 @@
 import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import mikroOrmConfig from "./mikro-orm.config";
-import express from "express";
-import { __port__ } from "./constants";
+import express, { Application, Response, Request } from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
+import { __port__ } from "./constants";
 import { HelloResolver } from "./resolvers/hello";
-import { TodoResolver } from "./resolvers/todo";
+import { UserResolver } from "./resolvers/user";
+
+import redis from "redis";
+import session from "express-session";
+import connectRedis from "connect-redis";
+
 const main = async () => {
-  // Database connection and running latest migrations
   const orm = await MikroORM.init(mikroOrmConfig);
   await orm.getMigrator().up();
 
-  const app: express.Application = express();
+  const app: Application = express();
 
-  // Routes
-  app.get("/", (_req: express.Request, res: express.Response) => {
-    res.status(200).json({
-      name: "backend",
-      techs: "GraphQL, Express, MakroORM and PostgreSQL",
-    });
+  const RedisStore = connectRedis(session);
+  const redisClient = redis.createClient();
+
+  app.use(
+    session({
+      store: new RedisStore({ client: redisClient, disableTouch: true }),
+      saveUninitialized: false,
+      secret: "secret",
+      resave: false,
+      name: "user",
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+        httpOnly: true,
+        secure: false, // https when true
+        sameSite: "lax",
+      },
+    })
+  );
+  /*
+  Since it is a graphql server we are don't care
+  about other routes.
+  */
+  app.get("/", (_req: Request, res: Response) => {
+    return res.status(200).redirect("/graphql");
   });
-  // GraphQL server
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, TodoResolver],
       validate: false,
+      resolvers: [HelloResolver, UserResolver],
     }),
-    context: () => ({ em: orm.em }),
+    context: ({ req, res }) => ({ em: orm.em, req, res }),
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({ app });
-  app.listen(__port__, () => {
-    console.log("The server has started at port: %s", __port__);
-  });
+  app.listen(__port__, () =>
+    console.log("The server has started at port: %d", __port__)
+  );
 };
 
-main().catch((err) => console.log(err));
+main()
+  .then(() => {})
+  .catch((error) => console.error(error));

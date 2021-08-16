@@ -3,15 +3,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Todo_1 = require("./entities/Todo");
 const path_1 = __importDefault(require("path"));
+const User_1 = require("./entities/User");
 exports.default = {
-    entities: [Todo_1.Todo],
+    entities: [User_1.User],
     migrations: {
         path: path_1.default.join(__dirname, "./migrations"),
         pattern: /^[\w-]+\d+\.[t|j]s$/,
+        tableName: "users",
     },
-    dbName: "todo",
+    dbName: "users",
     password: "root",
     user: "postgres",
     port: 5432,

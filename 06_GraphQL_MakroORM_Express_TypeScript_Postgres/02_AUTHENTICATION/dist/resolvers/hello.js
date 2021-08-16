@@ -13,7 +13,7 @@ exports.HelloResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 let HelloResolver = class HelloResolver {
     hello() {
-        return "hello world!";
+        return "Hello world";
     }
 };
 __decorate([

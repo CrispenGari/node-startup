@@ -3,7 +3,7 @@ import { Field, Int, ObjectType } from "type-graphql";
 
 @ObjectType()
 @Entity()
-export class Todo {
+export class User {
   @Field(() => Int)
   @PrimaryKey()
   id: number;
@@ -12,15 +12,15 @@ export class Todo {
   @Property({ type: "date" })
   createdAt = new Date();
 
+  //   @Field(() => String)
+  @Property({ type: "text", nullable: false })
+  password!: string;
+
   @Field(() => String)
-  @Property({ type: "date", onUpdate: () => new Date() })
-  updatedAt = new Date();
+  @Property({ type: "text", unique: true, nullable: false })
+  username!: string;
 
-  @Field()
-  @Property({ type: "text" })
-  title: string;
-
-  @Field(() => Boolean)
-  @Property({ type: "boolean", default: false })
-  completed!: boolean;
+  @Field(() => String)
+  @Property({ type: "text", nullable: false })
+  email!: string;
 }
