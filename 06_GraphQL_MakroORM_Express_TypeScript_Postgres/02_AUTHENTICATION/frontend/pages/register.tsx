@@ -3,6 +3,7 @@ import Input from "../components/Common/Input/Input";
 import Link from "next/link";
 import { useMutation } from "@apollo/client";
 import REGISTER_MUTATION from "../graphql/mutations/register";
+import { useRouter } from "next/dist/client/router";
 interface Props {}
 const Register: React.FC<Props> = () => {
   const [register, { data, loading }] = useMutation(REGISTER_MUTATION);
@@ -22,6 +23,16 @@ const Register: React.FC<Props> = () => {
       },
     });
   }
+  const router = useRouter();
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (data?.register?.user && mounted) {
+      router.replace("/");
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [data]);
   return (
     <div
       style={{

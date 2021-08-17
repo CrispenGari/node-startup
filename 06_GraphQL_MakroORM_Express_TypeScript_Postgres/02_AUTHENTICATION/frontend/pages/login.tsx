@@ -1,15 +1,26 @@
 import { useMutation, useQuery } from "@apollo/client";
+import { useRouter } from "next/dist/client/router";
 import Link from "next/link";
 import React from "react";
 import Input from "../components/Common/Input/Input";
 import LOGIN_MUTATION from "../graphql/mutations/login";
-import USER_QUERY from "../graphql/queries/user";
 
 interface Props {}
 const Login: React.FC<Props> = () => {
   const [login, { data, loading }] = useMutation(LOGIN_MUTATION);
   const [username, setUsername] = React.useState<string>("");
   const [password, setPassword] = React.useState<string>("");
+  const router = useRouter();
+  React.useEffect(() => {
+    let mounted: boolean = true;
+    if (data?.login?.user && mounted) {
+      router.replace("/");
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [data]);
+
   function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     login({
