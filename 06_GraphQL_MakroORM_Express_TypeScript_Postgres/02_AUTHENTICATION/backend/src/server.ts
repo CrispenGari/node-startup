@@ -11,7 +11,7 @@ import { UserResolver } from "./resolvers/user";
 import redis from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
-
+import cors from "cors";
 const main = async () => {
   const orm = await MikroORM.init(mikroOrmConfig);
   await orm.getMigrator().up();
@@ -21,6 +21,12 @@ const main = async () => {
   const RedisStore = connectRedis(session);
   const redisClient = redis.createClient();
 
+  app.use(
+    cors({
+      credentials: true,
+      origin: "http://localhost:3000",
+    })
+  );
   app.use(
     session({
       store: new RedisStore({ client: redisClient, disableTouch: true }),
@@ -36,6 +42,7 @@ const main = async () => {
       },
     })
   );
+
   /*
   Since it is a graphql server we are don't care
   about other routes.
@@ -51,7 +58,7 @@ const main = async () => {
     context: ({ req, res }) => ({ em: orm.em, req, res }),
   });
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({ app, cors:false });
   app.listen(__port__, () =>
     console.log("The server has started at port: %d", __port__)
   );

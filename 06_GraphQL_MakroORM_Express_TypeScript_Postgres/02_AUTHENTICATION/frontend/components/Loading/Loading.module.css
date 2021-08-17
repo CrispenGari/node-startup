@@ -1,0 +1,23 @@
+.loading {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+}
+.loading > div {
+  width: 40px;
+  height: 40px;
+  border-radius: 40px;
+  border: 5px solid cornflowerblue;
+  border-left: 5px solid darkcyan;
+  animation: rotate 1s none 0s infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
