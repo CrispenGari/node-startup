@@ -637,3 +637,17 @@ The logout will be much simpler all we need to do is to destroy the session. The
     });
   }
 ```
+
+### Reset Password.
+
+We are going to handle the reset password logic from the backend and we move to the frontend. The workflow will be as follows:
+
+1. The user will send us a reset notification
+2. We are going to check if the user exists in the database
+3. We are going to generate a new token that will expire in an hour
+4. We are going to store the token in the redis in memory database and send the link to the user's email.
+5. When the user will be then redirected to the reset password page on the frontend.
+6. The user will send us his/her new password
+7. We hash the password and update the user's password in the database.
+
+For sending emails we are going to use `nodemailer` and for generating tokens we are going to use `uuid`.

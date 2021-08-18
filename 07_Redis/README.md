@@ -6,6 +6,20 @@ Redis is an open source (BSD licensed), in-memory data structure store, used as 
 
 Redis is an in-memory database that stored key value pairs. Not that in redis values are stored as strings.
 
+### Stating the redis server
+
+```shell
+redis-server
+```
+
+### Stopping the redis server
+
+```shell
+redis-cli shutdown # works perfectly
+# OR
+sudo service redis-server stop
+```
+
 0. Getting all the keys in the redis database
 
 ```
