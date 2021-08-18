@@ -2,14 +2,29 @@ import React from "react";
 import { NextPage } from "next";
 import Input from "../../components/Common/Input/Input";
 import Link from "next/link";
+import { useMutation } from "@apollo/client";
+import RESET_PASSWORD_MUTATION from "../../graphql/mutations/resetPassword";
+import ActivityIndicator from "../../components/Common/ActivityIndicator/ActivityIndicator";
 
-interface Props {}
-const ChangePassword: NextPage<Props> = () => {
+interface Props {
+  token: string;
+}
+const ChangePassword: NextPage<Props> = ({ token }) => {
   const [password, setPassword] = React.useState<string>("");
-  function resetPassword(e: React.FormEvent<HTMLFormElement>) {
+  const [resetPassword, { data, loading }] = useMutation(
+    RESET_PASSWORD_MUTATION
+  );
+  function resetPasswordHandler(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    resetPassword({
+      variables: {
+        resetPasswordEmailInput: {
+          newPassword: password,
+          token,
+        },
+      },
+    });
   }
-
   return (
     <div
       style={{
@@ -28,9 +43,28 @@ const ChangePassword: NextPage<Props> = () => {
           background: "white",
           padding: 20,
           borderRadius: 5,
+          position: "relative",
         }}
-        onSubmit={resetPassword}
+        onSubmit={resetPasswordHandler}
       >
+        {loading ? (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              background: "rgba(0, 0, 0, .3)",
+              zIndex: 10,
+              borderRadius: 5,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <ActivityIndicator />
+          </div>
+        ) : null}
         <h1
           style={{
             fontSize: "1rem",
@@ -44,9 +78,25 @@ const ChangePassword: NextPage<Props> = () => {
           value={password}
           placeholder={"password"}
           type="password"
+          error={
+            data?.resetPassword?.error
+              ? data?.resetPassword?.error?.message
+              : ""
+          }
           onChange={(e) => setPassword(e.target.value)}
         />
-
+        <p
+          style={{
+            color: "cornflowerblue",
+            fontSize: ".8rem",
+            marginTop: 10,
+            marginBottom: 10,
+          }}
+        >
+          {data?.resetPassword?.user
+            ? "Your password was changed please login again."
+            : ""}
+        </p>
         <p
           style={{
             justifyContent: "space-between",
@@ -84,4 +134,9 @@ const ChangePassword: NextPage<Props> = () => {
   );
 };
 
+ChangePassword.getInitialProps = async (context) => {
+  return {
+    token: String(context.query?.token),
+  };
+};
 export default ChangePassword;

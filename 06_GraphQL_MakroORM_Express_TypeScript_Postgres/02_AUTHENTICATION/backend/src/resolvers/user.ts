@@ -1,47 +1,13 @@
-import {
-  Arg,
-  Ctx,
-  Field,
-  InputType,
-  Mutation,
-  ObjectType,
-  Query,
-  Resolver,
-} from "type-graphql";
+import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
 import { User } from "../entities/User";
 import { UserContext } from "../types";
 import argon2 from "argon2";
+import { v4 as uuid_v4 } from "uuid";
+import { sendEmail } from "../utils";
+import { UserInput, ResetInput } from "./inputTypes";
+import { UserResponse, Email } from "./objectTypes";
 
-@InputType()
-class UserInput {
-  @Field(() => String)
-  username!: string;
-
-  @Field(() => String, { nullable: true })
-  email!: string;
-
-  @Field(() => String)
-  password!: string;
-}
-
-@ObjectType()
-class Error {
-  @Field(() => String)
-  name: string;
-
-  @Field(() => String)
-  message: string;
-}
-
-@ObjectType()
-class UserResponse {
-  @Field(() => User, { nullable: true })
-  user?: User;
-
-  @Field(() => Error, { nullable: true })
-  error?: Error;
-}
-
+const ONE_HOUR: number = 60 * 60;
 @Resolver()
 export class UserResolver {
   // GET USER
@@ -143,5 +109,77 @@ export class UserResolver {
         return resolved(true);
       });
     });
+  }
+  // Sending Email
+  @Mutation(() => Email)
+  async sendEmail(
+    @Arg("email", () => String) email: string,
+    @Ctx() { redis, em }: UserContext
+  ): Promise<Email> {
+    // Check if the email exists in the database
+    const user = await em.findOne(User, { email: email.toLocaleLowerCase() });
+    if (!user) {
+      return {
+        error: {
+          name: "email",
+          message: `There's no account corresponding to ${email}.`,
+        },
+      };
+    }
+    const token: string = uuid_v4() + uuid_v4();
+    await redis.setex(token, ONE_HOUR, String(user.id));
+    const message: string = `Click <a href="http://localhost:3000/reset-password/${token}">here</a> to reset your password.`;
+    await sendEmail(email, message);
+    return {
+      message: `We have sent the password reset link to ${email}. Please reset your password and login again.`,
+    };
+  }
+  // Resetting password
+  @Mutation(() => UserResponse, { nullable: true })
+  async resetPassword(
+    @Arg("emailInput", () => ResetInput) emailInput: ResetInput,
+    @Ctx() { redis, em }: UserContext
+  ): Promise<UserResponse | null | boolean> {
+    // Find the token
+    if (emailInput.newPassword.length <= 3) {
+      return {
+        error: {
+          message: "password must have at least 3 characters",
+          name: "password",
+        },
+      };
+    }
+    const userId = await redis.get(emailInput.token);
+    if (userId === null) {
+      return {
+        error: {
+          name: "token",
+          message: "could not find the token. maybe it has expired",
+        },
+      };
+    }
+    // Update the user
+    const user = await em.findOne(User, {
+      id: Number.parseInt(userId),
+    });
+    if (user === null) {
+      return {
+        error: {
+          name: "user",
+          message: "the user was not found maybe the account was deleted",
+        },
+      };
+    }
+    if (user) {
+      user.password = await argon2.hash(
+        emailInput.newPassword.toLocaleLowerCase()
+      );
+      // delete the token
+      await redis.del(emailInput.token);
+      await em.persistAndFlush(user);
+    }
+    return {
+      user: user,
+    };
   }
 }

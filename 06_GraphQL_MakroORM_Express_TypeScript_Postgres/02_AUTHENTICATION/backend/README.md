@@ -651,3 +651,447 @@ We are going to handle the reset password logic from the backend and we move to 
 7. We hash the password and update the user's password in the database.
 
 For sending emails we are going to use `nodemailer` and for generating tokens we are going to use `uuid`.
+
+1. Nodemailer Installation
+
+- [Nodemailer docs](https://nodemailer.com/about/)
+
+```bash
+yarn add nodemailer
+# Types
+yarn add @types/nodemailer
+```
+
+2. `uuid` installation
+
+```bash
+yarn add uuid
+```
+
+3. `ioredis` installation
+
+- Redis is boring when fetching the data, it always returns promises and makes code long. So We are going to change from using redis to the use of `ioredis` which can be found [here](https://www.npmjs.com/package/ioredis)
+
+```bash
+yarn add ioredis
+```
+
+- We don't need to install types for this package. Then the server.ts will look as follows:
+
+```ts
+import "reflect-metadata";
+import { MikroORM } from "@mikro-orm/core";
+import mikroOrmConfig from "./mikro-orm.config";
+import express, { Application, Response, Request } from "express";
+import { ApolloServer } from "apollo-server-express";
+import { buildSchema } from "type-graphql";
+import { __port__ } from "./constants";
+import { HelloResolver } from "./resolvers/hello";
+import { UserResolver } from "./resolvers/user";
+
+import Redis from "ioredis";
+import session from "express-session";
+import connectRedis from "connect-redis";
+import cors from "cors";
+const main = async () => {
+  const orm = await MikroORM.init(mikroOrmConfig);
+  await orm.getMigrator().up();
+
+  const app: Application = express();
+
+  const RedisStore = connectRedis(session);
+  const redisClient = new Redis();
+  app.use(
+    cors({
+      credentials: true,
+      origin: "http://localhost:3000",
+    })
+  );
+  app.use(
+    session({
+      store: new RedisStore({ client: redisClient, disableTouch: true }),
+      saveUninitialized: false,
+      secret: "secret",
+      resave: false,
+      name: "user",
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+        httpOnly: true,
+        secure: false, // https when true
+        sameSite: "lax",
+      },
+    })
+  );
+
+  /*
+  Since it is a graphql server we are don't care
+  about other routes.
+  */
+  app.get("/", (_req: Request, res: Response) => {
+    return res.status(200).redirect("/graphql");
+  });
+  const apolloServer = new ApolloServer({
+    schema: await buildSchema({
+      validate: false,
+      resolvers: [HelloResolver, UserResolver],
+    }),
+    context: ({ req, res }) => ({ em: orm.em, req, res, redis: redisClient }),
+  });
+  await apolloServer.start();
+  apolloServer.applyMiddleware({ app, cors: false });
+  app.listen(__port__, () =>
+    console.log("The server has started at port: %d", __port__)
+  );
+};
+
+main()
+  .then(() => {})
+  .catch((error) => console.error(error));
+```
+
+Then we will go to our `types/index.ts` to change the it to:
+
+```ts
+import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
+import express from "express";
+import { Redis } from "ioredis";
+export type UserContext = {
+  em: EntityManager<IDatabaseDriver<Connection>>;
+  req: express.Request & { session?: any };
+  res: express.Response;
+  redis: Redis;
+};
+```
+
+- I'm also going to `refactor` custom ObjectsTypes and InputsTypes that are in the `user` resolver into separate files. These files will look as follows:
+
+1. `inputTypes/index.ts`
+
+```ts
+import { InputType, Field } from "type-graphql";
+
+@InputType()
+export class UserInput {
+  @Field(() => String)
+  username!: string;
+
+  @Field(() => String, { nullable: true })
+  email!: string;
+
+  @Field(() => String)
+  password!: string;
+}
+
+@InputType()
+export class ResetInput {
+  @Field(() => String)
+  token!: string;
+  @Field(() => String)
+  newPassword!: string;
+}
+```
+
+2. `objectTypes/index.ts`
+
+```ts
+import { User } from "../../entities/User";
+import { Field, ObjectType } from "type-graphql";
+
+@ObjectType()
+export class Error {
+  @Field(() => String)
+  name: string;
+
+  @Field(() => String)
+  message: string;
+}
+
+@ObjectType()
+export class UserResponse {
+  @Field(() => User, { nullable: true })
+  user?: User;
+
+  @Field(() => Error, { nullable: true })
+  error?: Error;
+}
+
+@ObjectType()
+export class Email {
+  @Field(() => Error, { nullable: true })
+  error?: Error;
+  @Field(() => String, { nullable: true })
+  message?: string;
+}
+```
+
+We are going to add two mutations in the `user` resolvers which are `resetPassword` and `sendEmail` respectively.
+
+1.  `resetPassword`
+
+```ts
+  @Mutation(() => UserResponse, { nullable: true })
+  async resetPassword(
+    @Arg("emailInput", () => ResetInput) emailInput: ResetInput,
+    @Ctx() { redis, em }: UserContext
+  ): Promise<UserResponse | null | boolean> {
+    // Find the token
+    if (emailInput.newPassword.length <= 3) {
+      return {
+        error: {
+          message: "password must have at least 3 characters",
+          name: "password",
+        },
+      };
+    }
+    const userId = await redis.get(emailInput.token);
+    if (userId === null) {
+      return {
+        error: {
+          name: "token",
+          message: "could not find the token. maybe it has expired",
+        },
+      };
+    }
+    // Update the user
+    const user = await em.findOne(User, {
+      id: Number.parseInt(userId),
+    });
+    if (user === null) {
+      return {
+        error: {
+          name: "user",
+          message: "the user was not found maybe the account was deleted",
+        },
+      };
+    }
+    if (user) {
+      user.password = await argon2.hash(
+        emailInput.newPassword.toLocaleLowerCase()
+      );
+      // delete the token
+      await redis.del(emailInput.token);
+      await em.persistAndFlush(user);
+    }
+    return {
+      user: user,
+    };
+  }
+```
+
+2. `sendEmail`
+
+```ts
+@Mutation(() => Email)
+  async sendEmail(
+    @Arg("email", () => String) email: string,
+    @Ctx() { redis, em }: UserContext
+  ): Promise<Email> {
+    // Check if the email exists in the database
+    const user = await em.findOne(User, { email: email.toLocaleLowerCase() });
+    if (!user) {
+      return {
+        error: {
+          name: "email",
+          message: `There's no account corresponding to ${email}.`,
+        },
+      };
+    }
+    const token: string = uuid_v4() + uuid_v4();
+    await redis.setex(token, ONE_HOUR, String(user.id));
+    const message: string = `Click <a href="http://localhost:3000/reset-password/${token}">here</a> to reset your password.`;
+    await sendEmail(email, message);
+    return {
+      message: `We have sent the password reset link to ${email}. Please reset your password and login again.`,
+    };
+  }
+```
+
+The code in the `user.ts` resolver will look as follows:
+
+```ts
+import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import { User } from "../entities/User";
+import { UserContext } from "../types";
+import argon2 from "argon2";
+import { v4 as uuid_v4 } from "uuid";
+import { sendEmail } from "../utils";
+import { UserInput, ResetInput } from "./inputTypes";
+import { UserResponse, Email } from "./objectTypes";
+
+const ONE_HOUR: number = 60 * 60;
+@Resolver()
+export class UserResolver {
+  // GET USER
+  @Query(() => User, { nullable: true })
+  async user(@Ctx() { em, req }: UserContext): Promise<User | null> {
+    if (!req.session.userId) {
+      return null;
+    }
+    const user = await em.findOne(User, {
+      id: req.session.userId,
+    });
+    return user;
+  }
+  // REGISTER
+  @Mutation(() => UserResponse)
+  async register(
+    @Ctx() { em, req }: UserContext,
+    @Arg("user", () => UserInput, { nullable: true }) user: UserInput
+  ): Promise<UserResponse | null> {
+    if (user.username.length <= 3) {
+      return {
+        error: {
+          message: "username must have at least 3 characters",
+          name: "username",
+        },
+      };
+    }
+    if (user.password.length <= 3) {
+      return {
+        error: {
+          message: "password must have at least 3 characters",
+          name: "password",
+        },
+      };
+    }
+    const hashed = await argon2.hash(user.password);
+    const _user = em.create(User, {
+      email: user.email.toLocaleLowerCase(),
+      password: hashed,
+      username: user.username.toLocaleLowerCase(),
+    });
+    try {
+      await em.persistAndFlush(_user);
+    } catch (error) {
+      if (
+        error.code === "23505" ||
+        String(error.detail).includes("already exists")
+      ) {
+        return {
+          error: {
+            message: "username is taken by someone else",
+            name: "username",
+          },
+        };
+      }
+    }
+    req.session.userId = _user.id;
+    return { user: _user };
+  }
+
+  // LOGIN
+  @Mutation(() => UserResponse)
+  async login(
+    @Ctx() { em, req }: UserContext,
+    @Arg("user", () => UserInput, { nullable: true }) user: UserInput
+  ): Promise<UserResponse | null> {
+    const _userFound = await em.findOne(User, {
+      username: user.username.toLocaleLowerCase(),
+    });
+    if (!_userFound) {
+      return {
+        error: {
+          message: "username does not exists",
+          name: "username",
+        },
+      };
+    }
+    const compare = await argon2.verify(_userFound?.password, user?.password);
+    if (!Boolean(compare)) {
+      return {
+        error: {
+          name: "password",
+          message: "invalid password",
+        },
+      };
+    } else {
+      req.session.userId = _userFound.id;
+      return { user: _userFound };
+    }
+  }
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: UserContext): Promise<boolean> {
+    return new Promise((resolved, rejection) => {
+      req.session.destroy((error: any) => {
+        res.clearCookie("user");
+        if (error) {
+          return rejection(false);
+        }
+        return resolved(true);
+      });
+    });
+  }
+  // Sending Email
+  @Mutation(() => Email)
+  async sendEmail(
+    @Arg("email", () => String) email: string,
+    @Ctx() { redis, em }: UserContext
+  ): Promise<Email> {
+    // Check if the email exists in the database
+    const user = await em.findOne(User, { email: email.toLocaleLowerCase() });
+    if (!user) {
+      return {
+        error: {
+          name: "email",
+          message: `There's no account corresponding to ${email}.`,
+        },
+      };
+    }
+    const token: string = uuid_v4() + uuid_v4();
+    await redis.setex(token, ONE_HOUR, String(user.id));
+    const message: string = `Click <a href="http://localhost:3000/reset-password/${token}">here</a> to reset your password.`;
+    await sendEmail(email, message);
+    return {
+      message: `We have sent the password reset link to ${email}. Please reset your password and login again.`,
+    };
+  }
+  // Resetting password
+  @Mutation(() => UserResponse, { nullable: true })
+  async resetPassword(
+    @Arg("emailInput", () => ResetInput) emailInput: ResetInput,
+    @Ctx() { redis, em }: UserContext
+  ): Promise<UserResponse | null | boolean> {
+    // Find the token
+    if (emailInput.newPassword.length <= 3) {
+      return {
+        error: {
+          message: "password must have at least 3 characters",
+          name: "password",
+        },
+      };
+    }
+    const userId = await redis.get(emailInput.token);
+    if (userId === null) {
+      return {
+        error: {
+          name: "token",
+          message: "could not find the token. maybe it has expired",
+        },
+      };
+    }
+    // Update the user
+    const user = await em.findOne(User, {
+      id: Number.parseInt(userId),
+    });
+    if (user === null) {
+      return {
+        error: {
+          name: "user",
+          message: "the user was not found maybe the account was deleted",
+        },
+      };
+    }
+    if (user) {
+      user.password = await argon2.hash(
+        emailInput.newPassword.toLocaleLowerCase()
+      );
+      // delete the token
+      await redis.del(emailInput.token);
+      await em.persistAndFlush(user);
+    }
+    return {
+      user: user,
+    };
+  }
+}
+```

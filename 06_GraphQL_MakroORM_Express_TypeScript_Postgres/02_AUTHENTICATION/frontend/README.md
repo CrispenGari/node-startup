@@ -234,3 +234,5 @@ main()
   .then(() => {})
   .catch((error) => console.error(error));
 ```
+
+- The code of the frontend is not that violent we can check the files and see what is going on.

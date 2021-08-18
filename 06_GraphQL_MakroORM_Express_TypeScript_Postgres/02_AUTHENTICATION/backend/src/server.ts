@@ -8,7 +8,7 @@ import { __port__ } from "./constants";
 import { HelloResolver } from "./resolvers/hello";
 import { UserResolver } from "./resolvers/user";
 
-import redis from "redis";
+import Redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
@@ -19,8 +19,7 @@ const main = async () => {
   const app: Application = express();
 
   const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
-
+  const redisClient = new Redis();
   app.use(
     cors({
       credentials: true,
@@ -55,10 +54,10 @@ const main = async () => {
       validate: false,
       resolvers: [HelloResolver, UserResolver],
     }),
-    context: ({ req, res }) => ({ em: orm.em, req, res }),
+    context: ({ req, res }) => ({ em: orm.em, req, res, redis: redisClient }),
   });
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app, cors:false });
+  apolloServer.applyMiddleware({ app, cors: false });
   app.listen(__port__, () =>
     console.log("The server has started at port: %d", __port__)
   );
