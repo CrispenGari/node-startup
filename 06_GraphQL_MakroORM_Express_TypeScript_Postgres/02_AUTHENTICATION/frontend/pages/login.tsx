@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "@apollo/client";
+import { NextPage } from "next";
 import { useRouter } from "next/dist/client/router";
 import Link from "next/link";
 import React from "react";
@@ -6,7 +7,7 @@ import Input from "../components/Common/Input/Input";
 import LOGIN_MUTATION from "../graphql/mutations/login";
 
 interface Props {}
-const Login: React.FC<Props> = () => {
+const Login: NextPage<Props> = () => {
   const [login, { data, loading }] = useMutation(LOGIN_MUTATION);
   const [username, setUsername] = React.useState<string>("");
   const [password, setPassword] = React.useState<string>("");
@@ -114,6 +115,20 @@ const Login: React.FC<Props> = () => {
               }}
             >
               Register
+            </a>
+          </Link>
+        </p>
+        <p style={{ marginTop: 20, textAlign: "center" }}>
+          <Link href="/reset">
+            <a
+              style={{
+                fontSize: ".8rem",
+                color: "black",
+                textAlign: "center",
+                textDecoration: "underline black",
+              }}
+            >
+              forgot password?
             </a>
           </Link>
         </p>

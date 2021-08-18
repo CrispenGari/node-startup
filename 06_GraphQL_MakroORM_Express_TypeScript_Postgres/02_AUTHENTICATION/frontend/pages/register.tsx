@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useMutation } from "@apollo/client";
 import REGISTER_MUTATION from "../graphql/mutations/register";
 import { useRouter } from "next/dist/client/router";
+import { NextPage } from "next";
 interface Props {}
-const Register: React.FC<Props> = () => {
+const Register: NextPage<Props> = () => {
   const [register, { data, loading }] = useMutation(REGISTER_MUTATION);
   const [username, setUsername] = React.useState<string>("");
   const [password, setPassword] = React.useState<string>("");

@@ -1,10 +1,12 @@
 import { useQuery } from "@apollo/client";
+import { NextPage } from "next";
 import { useRouter } from "next/dist/client/router";
 import React from "react";
 import Loading from "../components/Loading/Loading";
 import Nav from "../components/Nav/Nav";
 import USER_QUERY from "../graphql/queries/user";
-const Home = () => {
+interface Props {}
+const Home: NextPage<Props> = () => {
   const { data: user, loading: loadingUser } = useQuery(USER_QUERY);
 
   const router = useRouter();
