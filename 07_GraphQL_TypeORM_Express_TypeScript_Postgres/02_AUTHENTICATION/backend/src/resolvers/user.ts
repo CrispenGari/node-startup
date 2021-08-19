@@ -6,25 +6,26 @@ import { v4 as uuid_v4 } from "uuid";
 import { sendEmail } from "../utils";
 import { UserInput, ResetInput } from "./inputTypes";
 import { UserResponse, Email } from "./objectTypes";
+import { getConnection } from "typeorm";
 
 const ONE_HOUR: number = 60 * 60;
 @Resolver()
 export class UserResolver {
   // GET USER
   @Query(() => User, { nullable: true })
-  async user(@Ctx() { em, req }: UserContext): Promise<User | null> {
+  async user(@Ctx() { req }: UserContext): Promise<User | undefined | null> {
     if (!req.session.userId) {
       return null;
     }
-    const user = await em.findOne(User, {
-      id: req.session.userId,
+    const user = await User.findOne({
+      where: { id: req.session.userId },
     });
     return user;
   }
   // REGISTER
   @Mutation(() => UserResponse)
   async register(
-    @Ctx() { em, req }: UserContext,
+    @Ctx() { req }: UserContext,
     @Arg("user", () => UserInput, { nullable: true }) user: UserInput
   ): Promise<UserResponse | null> {
     if (user.username.length <= 3) {
@@ -44,13 +45,20 @@ export class UserResolver {
       };
     }
     const hashed = await argon2.hash(user.password);
-    const _user = em.create(User, {
-      email: user.email.toLocaleLowerCase(),
-      password: hashed,
-      username: user.username.toLocaleLowerCase(),
-    });
+    let _user;
     try {
-      await em.persistAndFlush(_user);
+      const result = await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(User)
+        .values({
+          username: user.username.toLocaleLowerCase(),
+          email: user.email.toLocaleLowerCase(),
+          password: hashed,
+        })
+        .returning("*")
+        .execute();
+      _user = result.raw[0];
     } catch (error) {
       if (
         error.code === "23505" ||
@@ -71,11 +79,11 @@ export class UserResolver {
   // LOGIN
   @Mutation(() => UserResponse)
   async login(
-    @Ctx() { em, req }: UserContext,
+    @Ctx() { req }: UserContext,
     @Arg("user", () => UserInput, { nullable: true }) user: UserInput
-  ): Promise<UserResponse | null> {
-    const _userFound = await em.findOne(User, {
-      username: user.username.toLocaleLowerCase(),
+  ): Promise<UserResponse | null | undefined> {
+    const _userFound = await User.findOne({
+      where: { username: user.username.toLocaleLowerCase() },
     });
     if (!_userFound) {
       return {
@@ -114,10 +122,14 @@ export class UserResolver {
   @Mutation(() => Email)
   async sendEmail(
     @Arg("email", () => String) email: string,
-    @Ctx() { redis, em }: UserContext
+    @Ctx() { redis }: UserContext
   ): Promise<Email> {
     // Check if the email exists in the database
-    const user = await em.findOne(User, { email: email.toLocaleLowerCase() });
+    const user = await User.findOne({
+      where: {
+        email: email.toLocaleLowerCase(),
+      },
+    });
     if (!user) {
       return {
         error: {
@@ -138,8 +150,8 @@ export class UserResolver {
   @Mutation(() => UserResponse, { nullable: true })
   async resetPassword(
     @Arg("emailInput", () => ResetInput) emailInput: ResetInput,
-    @Ctx() { redis, em }: UserContext
-  ): Promise<UserResponse | null | boolean> {
+    @Ctx() { redis }: UserContext
+  ): Promise<UserResponse | null | undefined> {
     // Find the token
     if (emailInput.newPassword.length <= 3) {
       return {
@@ -154,14 +166,26 @@ export class UserResolver {
       return {
         error: {
           name: "token",
-          message: "could not find the token. maybe it has expired",
+          message: "could not find the token maybe it has expired",
         },
       };
     }
     // Update the user
-    const user = await em.findOne(User, {
-      id: Number.parseInt(userId),
-    });
+    const hashed = await argon2.hash(
+      emailInput.newPassword.toLocaleLowerCase()
+    );
+    const user = await User.findOne({ id: Number.parseInt(userId) });
+    if (user) {
+      // delete the token
+
+      await User.update(
+        { id: Number.parseInt(userId) },
+        {
+          password: hashed,
+        }
+      );
+    }
+    await redis.del(emailInput.token);
     if (user === null) {
       return {
         error: {
@@ -169,14 +193,6 @@ export class UserResolver {
           message: "the user was not found maybe the account was deleted",
         },
       };
-    }
-    if (user) {
-      user.password = await argon2.hash(
-        emailInput.newPassword.toLocaleLowerCase()
-      );
-      // delete the token
-      await redis.del(emailInput.token);
-      await em.persistAndFlush(user);
     }
     return {
       user: user,

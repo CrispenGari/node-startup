@@ -3,7 +3,7 @@ const LOGIN_MUTATION = gql`
   mutation ($loginUser: UserInput) {
     login(user: $loginUser) {
       user {
-        createdAt
+        createdat
         email
         username
         id

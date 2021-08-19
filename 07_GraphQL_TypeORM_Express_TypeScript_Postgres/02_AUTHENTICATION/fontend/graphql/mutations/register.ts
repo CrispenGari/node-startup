@@ -3,7 +3,7 @@ const REGISTER_MUTATION = gql`
   mutation ($registerUser: UserInput) {
     register(user: $registerUser) {
       user {
-        createdAt
+        createdat
         email
         username
         id

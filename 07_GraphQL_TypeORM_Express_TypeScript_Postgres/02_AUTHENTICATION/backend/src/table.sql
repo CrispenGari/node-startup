@@ -1,0 +1,10 @@
+-- CREATING A TABLE OF USERS
+
+DROP TABLE users;
+CREATE TABLE users(
+    id BIGSERIAL PRIMARY KEY NOT NULL,
+    password TEXT NOT NULL,
+    createdAt DATE NOT NULL DEFAULT NOW(),
+    username TEXT NOT NULL UNIQUE,
+    email text NOT NULL
+);

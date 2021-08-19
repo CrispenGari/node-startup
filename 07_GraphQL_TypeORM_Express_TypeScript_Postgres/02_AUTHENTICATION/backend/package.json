@@ -29,6 +29,7 @@
     "reflect-metadata": "^0.1.13",
     "ts-node": "^10.2.0",
     "type-graphql": "^1.1.1",
+    "typeorm": "^0.2.37",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -38,12 +39,5 @@
     "@types/express-session": "^1.17.4",
     "@types/redis": "^2.8.31",
     "typescript": "^4.3.5"
-  },
-  "mikro-orm": {
-    "useTsNode": true,
-    "configPaths": [
-      "./src/mikro-orm.config.ts",
-      "./dist/mikro-orm.config.js"
-    ]
   }
 }
