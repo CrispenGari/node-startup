@@ -4,7 +4,7 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { __port__ } from "./constants";
 import { HelloResolver } from "./resolvers/hello";
-import { UserResolver } from "./resolvers/user";
+import { UserResolver } from "./resolvers/authUser";
 import { createConnection } from "typeorm";
 
 import Redis from "ioredis";
@@ -12,13 +12,16 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
 import { typeORMConfig } from "./typeorm.config";
+import { AuthUser } from "./entities/AuthUser";
 const main = async () => {
   const conn = await createConnection(typeORMConfig);
   await conn.runMigrations();
   const app: Application = express();
+  await AuthUser.delete({});
 
   const RedisStore = connectRedis(session);
   const redisClient = new Redis();
+
   app.use(
     cors({
       credentials: true,

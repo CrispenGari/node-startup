@@ -1,5 +1,5 @@
 import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
-import { User } from "../entities/User";
+import { AuthUser } from "../entities/AuthUser";
 import { UserContext } from "../types";
 import argon2 from "argon2";
 import { v4 as uuid_v4 } from "uuid";
@@ -7,18 +7,21 @@ import { sendEmail } from "../utils";
 import { UserInput, ResetInput } from "./inputTypes";
 import { UserResponse, Email } from "./objectTypes";
 import { getConnection } from "typeorm";
+import { REGISTER_USER_COMMAND } from "./commands";
 
 const ONE_HOUR: number = 60 * 60;
 @Resolver()
 export class UserResolver {
   // GET USER
-  @Query(() => User, { nullable: true })
-  async user(@Ctx() { req }: UserContext): Promise<User | undefined | null> {
+  @Query(() => AuthUser, { nullable: true })
+  async user(
+    @Ctx() { req }: UserContext
+  ): Promise<AuthUser | undefined | null> {
     if (!req.session.userId) {
       return null;
     }
-    const user = await User.findOne({
-      where: { id: req.session.userId },
+    const user = await AuthUser.findOne({
+      where: { id: Number.parseInt(req.session.userId) },
     });
     return user;
   }
@@ -45,35 +48,29 @@ export class UserResolver {
       };
     }
     const hashed = await argon2.hash(user.password);
-    let _user;
-    try {
-      const result = await getConnection()
-        .createQueryBuilder()
-        .insert()
-        .into(User)
-        .values({
-          username: user.username.toLocaleLowerCase(),
-          email: user.email.toLocaleLowerCase(),
-          password: hashed,
-        })
-        .returning("*")
-        .execute();
-      _user = result.raw[0];
-    } catch (error) {
-      if (
-        error.code === "23505" ||
-        String(error.detail).includes("already exists")
-      ) {
-        return {
-          error: {
-            message: "username is taken by someone else",
-            name: "username",
-          },
-        };
-      }
+    const _searchUser = await AuthUser.findOne({
+      where: {
+        username: user?.username?.toLocaleLowerCase(),
+      },
+    });
+    if (_searchUser) {
+      return {
+        error: {
+          message: "username is taken by someone else",
+          name: "username",
+        },
+      };
+    } else {
+      const _user = await getConnection().query(REGISTER_USER_COMMAND, [
+        user.username.toLocaleLowerCase(),
+        user.email.toLocaleLowerCase(),
+        hashed,
+      ]);
+      req.session.userId = _user[0].id;
+      return {
+        user: _user[0],
+      };
     }
-    req.session.userId = _user.id;
-    return { user: _user };
   }
 
   // LOGIN
@@ -82,7 +79,7 @@ export class UserResolver {
     @Ctx() { req }: UserContext,
     @Arg("user", () => UserInput, { nullable: true }) user: UserInput
   ): Promise<UserResponse | null | undefined> {
-    const _userFound = await User.findOne({
+    const _userFound = await AuthUser.findOne({
       where: { username: user.username.toLocaleLowerCase() },
     });
     if (!_userFound) {
@@ -125,7 +122,7 @@ export class UserResolver {
     @Ctx() { redis }: UserContext
   ): Promise<Email> {
     // Check if the email exists in the database
-    const user = await User.findOne({
+    const user = await AuthUser.findOne({
       where: {
         email: email.toLocaleLowerCase(),
       },
@@ -174,11 +171,11 @@ export class UserResolver {
     const hashed = await argon2.hash(
       emailInput.newPassword.toLocaleLowerCase()
     );
-    const user = await User.findOne({ id: Number.parseInt(userId) });
+    const user = await AuthUser.findOne({ id: Number.parseInt(userId) });
     if (user) {
       // delete the token
 
-      await User.update(
+      await AuthUser.update(
         { id: Number.parseInt(userId) },
         {
           password: hashed,

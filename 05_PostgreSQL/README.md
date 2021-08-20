@@ -43,6 +43,12 @@ postgres=# \dt
 postgres=# \dt+
 ```
 
+### Creating a new user in Postgress
+
+```shell
+psql -U postgres -c "CREATE ROLE crispen LOGIN NOSUPERUSER INHERIT CREATEDB CREATEROLE;"
+```
+
 ### Useful Resorces
 
 - [postgresqltutorial](https://www.postgresqltutorial.com/)

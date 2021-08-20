@@ -3,7 +3,7 @@ export const USER_QUERY = gql`
   query user {
     user {
       username
-      created_at
+      createdat
       email
       id
     }

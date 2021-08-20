@@ -9,7 +9,7 @@ import {
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class AuthUser extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   id: number;

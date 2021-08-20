@@ -17,7 +17,7 @@ const ResetPassword: NextPage<Props> = () => {
     e.preventDefault();
     sendEmail({
       variables: {
-        email,
+        sendEmailEmail: email,
       },
     });
   }

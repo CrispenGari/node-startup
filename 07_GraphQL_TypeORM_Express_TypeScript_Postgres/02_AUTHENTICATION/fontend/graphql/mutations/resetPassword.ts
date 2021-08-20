@@ -7,10 +7,10 @@ const RESET_PASSWORD_MUTATION = gql`
         name
       }
       user {
-        email
         createdat
-        username
+        email
         id
+        username
       }
     }
   }

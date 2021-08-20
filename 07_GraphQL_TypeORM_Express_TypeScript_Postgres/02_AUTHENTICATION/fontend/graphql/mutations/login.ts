@@ -2,15 +2,15 @@ import { gql } from "@apollo/client";
 const LOGIN_MUTATION = gql`
   mutation ($loginUser: UserInput) {
     login(user: $loginUser) {
+      error {
+        message
+        name
+      }
       user {
         createdat
-        email
         username
+        email
         id
-      }
-      error {
-        name
-        message
       }
     }
   }

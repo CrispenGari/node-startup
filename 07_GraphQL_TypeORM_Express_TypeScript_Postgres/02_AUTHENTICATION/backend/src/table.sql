@@ -1,7 +1,8 @@
 -- CREATING A TABLE OF USERS
 
-DROP TABLE users;
-CREATE TABLE users(
+CREATE DATABASE auth_user;
+DROP TABLE auth_user;
+CREATE TABLE auth_user(
     id BIGSERIAL PRIMARY KEY NOT NULL,
     password TEXT NOT NULL,
     createdAt DATE NOT NULL DEFAULT NOW(),

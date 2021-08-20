@@ -18,17 +18,19 @@ const apollo_server_express_1 = require("apollo-server-express");
 const type_graphql_1 = require("type-graphql");
 const constants_1 = require("./constants");
 const hello_1 = require("./resolvers/hello");
-const user_1 = require("./resolvers/user");
+const authUser_1 = require("./resolvers/authUser");
 const typeorm_1 = require("typeorm");
 const ioredis_1 = __importDefault(require("ioredis"));
 const express_session_1 = __importDefault(require("express-session"));
 const connect_redis_1 = __importDefault(require("connect-redis"));
 const cors_1 = __importDefault(require("cors"));
 const typeorm_config_1 = require("./typeorm.config");
+const AuthUser_1 = require("./entities/AuthUser");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const conn = yield typeorm_1.createConnection(typeorm_config_1.typeORMConfig);
     yield conn.runMigrations();
     const app = express_1.default();
+    yield AuthUser_1.AuthUser.delete({});
     const RedisStore = connect_redis_1.default(express_session_1.default);
     const redisClient = new ioredis_1.default();
     app.use(cors_1.default({
@@ -54,7 +56,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema: yield type_graphql_1.buildSchema({
             validate: false,
-            resolvers: [hello_1.HelloResolver, user_1.UserResolver],
+            resolvers: [hello_1.HelloResolver, authUser_1.UserResolver],
         }),
         context: ({ req, res }) => ({ req, res, redis: redisClient }),
     });

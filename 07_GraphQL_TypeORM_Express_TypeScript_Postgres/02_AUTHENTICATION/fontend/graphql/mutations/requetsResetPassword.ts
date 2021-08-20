@@ -1,12 +1,12 @@
 import { gql } from "@apollo/client";
 const REQUEST_RESET_PASSWORD_MUTATION = gql`
-  mutation ($email: String!) {
-    sendEmail(email: $email) {
-      message
+  mutation ($sendEmailEmail: String!) {
+    sendEmail(email: $sendEmailEmail) {
       error {
-        name
         message
+        name
       }
+      message
     }
   }
 `;

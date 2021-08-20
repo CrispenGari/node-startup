@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Email = exports.UserResponse = exports.Error = void 0;
-const User_1 = require("../../entities/User");
+const AuthUser_1 = require("../../entities/AuthUser");
 const type_graphql_1 = require("type-graphql");
 let Error = class Error {
 };
@@ -29,8 +29,8 @@ exports.Error = Error;
 let UserResponse = class UserResponse {
 };
 __decorate([
-    type_graphql_1.Field(() => User_1.User, { nullable: true }),
-    __metadata("design:type", User_1.User)
+    type_graphql_1.Field(() => AuthUser_1.AuthUser, { nullable: true }),
+    __metadata("design:type", AuthUser_1.AuthUser)
 ], UserResponse.prototype, "user", void 0);
 __decorate([
     type_graphql_1.Field(() => Error, { nullable: true }),

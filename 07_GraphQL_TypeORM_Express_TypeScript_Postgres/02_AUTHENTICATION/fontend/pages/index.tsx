@@ -25,7 +25,6 @@ const Home: NextPage<Props> = () => {
   if (loadingUser) {
     return <Loading />;
   }
-  console.log(user);
   return (
     <div>
       <Nav user={user?.user} />
