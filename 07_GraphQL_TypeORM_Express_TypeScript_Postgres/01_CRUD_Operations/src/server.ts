@@ -7,6 +7,7 @@ import { HelloResolver } from "./resolvers/hello";
 import { TodoResolver } from "./resolvers/todo";
 import { createConnection } from "typeorm";
 import { typeORMConfig } from "./typeorm.config";
+import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 const main = async () => {
   const conn = await createConnection(typeORMConfig);
   await conn.runMigrations();
@@ -26,6 +27,7 @@ const main = async () => {
       resolvers: [HelloResolver, TodoResolver],
       validate: false,
     }),
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground({})],
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({ app });

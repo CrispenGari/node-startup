@@ -21,6 +21,7 @@ const hello_1 = require("./resolvers/hello");
 const todo_1 = require("./resolvers/todo");
 const typeorm_1 = require("typeorm");
 const typeorm_config_1 = require("./typeorm.config");
+const apollo_server_core_1 = require("apollo-server-core");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const conn = yield typeorm_1.createConnection(typeorm_config_1.typeORMConfig);
     yield conn.runMigrations();
@@ -36,6 +37,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             resolvers: [hello_1.HelloResolver, todo_1.TodoResolver],
             validate: false,
         }),
+        plugins: [apollo_server_core_1.ApolloServerPluginLandingPageGraphQLPlayground({})],
     });
     yield apolloServer.start();
     apolloServer.applyMiddleware({ app });
