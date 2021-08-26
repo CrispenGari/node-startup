@@ -1,0 +1,33 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "server.ts",
+  "description": "None",
+  "author": "Crispen Gari",
+  "license": "MIT",
+  "keywords": [
+    "None"
+  ],
+  "scripts": {
+    "watch": "tsc -w",
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts",
+    "start:fast": "ts-node-dev --respawn src/server.ts"
+  },
+  "dependencies": {
+    "cloudinary": "^1.26.3",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "ts-node": "^10.2.0",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.12",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.6.1",
+    "nodemon": "^2.0.12"
+  }
+}
