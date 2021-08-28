@@ -269,6 +269,114 @@ router.get(
 
 ### PostgreSQL Pagination API
 
+### Create a database
+
+```
+postgres=# CREATE DATABASE posts;
+```
+
+### Selecting a database
+
+```
+postgres=# \c posts
+```
+
+### Creating a table
+
+```sql
+CREATE TABLE posts(
+  id BIGSERIAL NOT NULL,
+  date DATE NOT NULL DEFAULT NOW(),
+  title TEXT NOT NULL,
+  PRIMARY KEY(id)
+);
+```
+
+### Inserting data into the database
+
+```ts
+(async () => {
+  if ((await pool.query("SELECT * FROM posts;")).rowCount > 1) {
+    return;
+  }
+  for (let p of posts) {
+    const COMMAND = `INSERT INTO posts(title) values("${p.post}");`;
+    await pool.query(COMMAND);
+  }
+  console.log("Insert Done");
+})().then(() => {});
+```
+
+### Creating the middleware function that will paginate the posts in the postgres SQL
+
+> The SQL command that will help us to achive this is as follows:
+
+```sql
+SELECT * FROM table_name OFFSET starting_index LIMIT ending_index;
+```
+
+```ts
+import { Pool } from "pg";
+import { Request, Response } from "express";
+export const pool = new Pool({
+  host: "localhost" || "127.0.0.1",
+  password: "root",
+  user: "postgres",
+  port: 5432,
+  database: "posts",
+});
+
+const fetchResults = () => {
+  return async (req: Request, res: Response | any, next: any) => {
+    const page: number = Number.parseInt((req.query as any).page);
+    const limit: number = Number.parseInt((req.query as any).limit);
+    const results: any = {};
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    if (endIndex < (await pool.query(`SELECT * FROM posts;`)).rowCount) {
+      results.next = {
+        page: page + 1,
+        limit: limit,
+      };
+    }
+    if (startIndex > 0) {
+      results.previous = {
+        page: page - 1,
+        limit: limit,
+      };
+    }
+    try {
+      const { rows } = await pool.query(
+        `SELECT * FROM posts OFFSET ${startIndex} LIMIT ${startIndex};`
+      );
+      results.results = rows;
+      res.paginatedResults = results;
+      next();
+    } catch (error) {
+      res.status(500).json({
+        code: 500,
+        error,
+      });
+    }
+  };
+};
+
+export default fetchResults;
+```
+
+### The endpoint will be as follows in the `routes/index.ts`
+
+```ts
+router.get(
+  "/posts/postgres",
+  fetchResultsPostgres(),
+  (_req: Request, res: Response | any) => {
+    return res.json(res.paginatedResults);
+  }
+);
+```
+
 ### Uses
 
 - This idea is very usefull in programing because it improve the performance of our application. Instead of querying all the data at once we fetch the data that is required by the user at a time.

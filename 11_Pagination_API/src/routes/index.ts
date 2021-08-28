@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import fetchResults from "../middlewares";
 import fetchResultsMySql from "../middlewares/mysql";
+import fetchResultsPostgres from "../middlewares/postgres";
 import Post from "../mongodb/models";
 const router: Router = Router();
 router.get(
@@ -13,6 +14,13 @@ router.get(
 router.get(
   "/posts/mysql",
   fetchResultsMySql(),
+  (_req: Request, res: Response | any) => {
+    return res.json(res.paginatedResults);
+  }
+);
+router.get(
+  "/posts/postgres",
+  fetchResultsPostgres(),
   (_req: Request, res: Response | any) => {
     return res.json(res.paginatedResults);
   }

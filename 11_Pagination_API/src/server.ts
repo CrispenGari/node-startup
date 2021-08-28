@@ -6,6 +6,7 @@ import { connectionURL } from "./mongodb/connection";
 import Post from "./mongodb/models";
 import posts from "./routes/posts";
 import { connection } from "./middlewares/mysql";
+import { pool } from "./middlewares/postgres";
 
 // ----
 const app: express.Application = express();
@@ -22,7 +23,7 @@ mongoose.connection.once("open", async () => {
     });
   }
 });
-
+//  MySQL
 (async () => {
   if ((await connection.query("SELECT * FROM posts;"))[0] as any) {
     return;
@@ -31,11 +32,21 @@ mongoose.connection.once("open", async () => {
     const COMMAND = `INSERT INTO posts(title) values("${p.post}");`;
     await connection.query(COMMAND);
   }
-})().then(() => {
   console.log("Insert Done");
-});
+})().then(() => {});
 
-//  MySQL
+// Postgres
+(async () => {
+  if ((await pool.query("SELECT * FROM posts;")).rowCount > 1) {
+    return;
+  }
+  for (let p of posts) {
+    const COMMAND = `INSERT INTO posts(title) values($1) RETURNING *;`;
+    await pool.query(COMMAND, [p.post]);
+  }
+  console.log("Insert Done");
+})().then(() => {});
+
 //
 app.use(cors());
 app.use(express.json());

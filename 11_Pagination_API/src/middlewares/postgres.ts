@@ -15,10 +15,8 @@ const fetchResults = () => {
     const results: any = {};
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const conn = await connection.getConnection();
-    const all = await conn.query(`SELECT * FROM posts;`);
-    console.log((all[0] as any).length);
-    if (endIndex < (all[0] as any).length) {
+
+    if (endIndex < (await pool.query(`SELECT * FROM posts;`)).rowCount) {
       results.next = {
         page: page + 1,
         limit: limit,
@@ -31,11 +29,10 @@ const fetchResults = () => {
       };
     }
     try {
-      results.results = (
-        (await conn.query(
-          `SELECT * FROM posts LIMIT ${startIndex}, ${startIndex};`
-        )) as any
-      )[0];
+      const { rows } = await pool.query(
+        `SELECT * FROM posts OFFSET ${startIndex} LIMIT ${startIndex};`
+      );
+      results.results = rows;
       res.paginatedResults = results;
       next();
     } catch (error) {
