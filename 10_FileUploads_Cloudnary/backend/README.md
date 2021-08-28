@@ -116,4 +116,4 @@ router.delete("/api/delete/:id", async (req: Request, res: Response) => {
 
 ### Ref
 
-- [Doce](https://cloudinary.com/documentation/node_integration#installation_and_setup)
+- [Docs](https://cloudinary.com/documentation/node_integration#installation_and_setup)
