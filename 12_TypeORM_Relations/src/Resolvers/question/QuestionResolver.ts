@@ -38,24 +38,25 @@ export class QuestionResolver {
     return await Question.findOne(id, { relations: ["categories"] });
   }
 
+  // Getting a specific Query
+  @Query(() => [Category], { nullable: true })
+  async categories(): Promise<Category[]> {
+    return await Category.find({ relations: ["questions"] });
+  }
+
   // Adding a question
   @Mutation(() => Question)
   async addQuestion(
     @Arg("input", () => QuestionInput) { title, categories }: QuestionInput
   ) {
     let _categories: Category[] = [];
-    await categories.forEach(async (category) => {
-      _categories.push(
-        await Category.create({
-          ...category,
-        }).save()
-      );
-    });
-    console.log(_categories);
+    for (let i = 0; i < categories.length; i++) {
+      const category = await Category.create(categories[i]).save();
+      _categories.push(category);
+    }
     return await Question.create({
       title,
       categories: _categories,
     }).save();
   }
-  // deleting a question
 }

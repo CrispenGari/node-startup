@@ -348,15 +348,191 @@ We are going to follow the example that is in the docs of Question to Categories
 > Uni-directional Relations
 
 ```ts
+// Question.ts
+import { Field, Int, ObjectType } from "type-graphql";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
+  BaseEntity,
+} from "typeorm";
+import { Category } from "./Category";
 
+@ObjectType()
+@Entity()
+export class Question extends BaseEntity {
+  @Field(() => Int)
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Field(() => String)
+  @Column()
+  title: string;
+
+  @Field(() => [Category])
+  @ManyToMany(() => Category)
+  @JoinTable()
+  categories: Category[];
+}
 ```
 
 Acording to the docs **`@JoinTable()` is required for `@ManyToMany` relations. You must put `@JoinTable` on one (owning) side of relation.**
 
 ```ts
+// Category.ts
+import { Field, Int, ObjectType } from "type-graphql";
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "typeorm";
 
+@ObjectType()
+@Entity()
+export class Category extends BaseEntity {
+  @Field(() => Int)
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Field(() => String)
+  @Column()
+  name: string;
+}
+```
+
+Now our resolver will look as follows:
+
+```ts
+// QuestionResolver.ts
+
+import { Category } from "../../entities/Category";
+import {
+  Arg,
+  Field,
+  InputType,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+} from "type-graphql";
+import { Question } from "../../entities/Question";
+
+@InputType()
+class CategoryInput {
+  @Field(() => String)
+  name: string;
+}
+@InputType()
+class QuestionInput {
+  @Field(() => String)
+  title: string;
+  @Field(() => [CategoryInput])
+  categories: CategoryInput[];
+}
+
+@Resolver()
+export class QuestionResolver {
+  //  Getting all the quetions
+  @Query(() => [Question])
+  async questions(): Promise<Question[]> {
+    return await Question.find({ relations: ["categories"] });
+  }
+  // Getting a specific question
+  @Query(() => Question, { nullable: true })
+  async question(
+    @Arg("id", () => Int) id: number
+  ): Promise<Question | undefined> {
+    return await Question.findOne(id, { relations: ["categories"] });
+  }
+
+  // Adding a question
+  @Mutation(() => Question)
+  async addQuestion(
+    @Arg("input", () => QuestionInput) { title, categories }: QuestionInput
+  ) {
+    let _categories: Category[] = [];
+    for (let i = 0; i < categories.length; i++) {
+      const category = await Category.create(categories[i]).save();
+      _categories.push(category);
+    }
+    return await Question.create({
+      title,
+      categories: _categories,
+    }).save();
+  }
+}
+```
+
+Next we are going to do bidirectional Relations. We are going to change our entities and they will be looking as follows:
+
+```ts
+// Category.ts
+import { Field, Int, ObjectType } from "type-graphql";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  BaseEntity,
+  ManyToMany,
+} from "typeorm";
+import { Question } from "./Question";
+
+@ObjectType()
+@Entity()
+export class Category extends BaseEntity {
+  @Field(() => Int)
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Field(() => String)
+  @Column()
+  name: string;
+
+  @Field(() => [Question])
+  @ManyToMany(() => Question, (question) => question.categories)
+  questions: Question[];
+}
 ```
 
 ```ts
+// Question.ts
+import { Field, Int, ObjectType } from "type-graphql";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
+  BaseEntity,
+} from "typeorm";
+import { Category } from "./Category";
 
+@ObjectType()
+@Entity()
+export class Question extends BaseEntity {
+  @Field(() => Int)
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Field(() => String)
+  @Column()
+  title: string;
+
+  @Field(() => [Category])
+  @ManyToMany(() => Category, (category) => category.questions)
+  @JoinTable()
+  categories: Category[];
+}
 ```
+
+We will modify our resolver and add the following query
+
+```ts
+...
+@Query(() => [Category], { nullable: true })
+  async categories(): Promise<Category[]> {
+    return await Category.find({ relations: ["questions"] });
+  }
+```
+
+### many-to-many relations with custom properties
+
+In case you need to have additional properties in your many-to-many relationship, you have to create a new entity yourself. For example, if you would like entities Post and Category to have a many-to-many relationship with an additional order column, then you need to create an entity PostToCategory with two ManyToOne relations pointing in both directions and with custom columns in it. [docs](https://typeorm.io/#/many-to-many-relations)
