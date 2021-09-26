@@ -1,0 +1,27 @@
+{
+  "name": "jwt",
+  "version": "1.0.0",
+  "main": "server.js",
+  "author": "crispengari",
+  "description": "jwt with express.",
+  "license": "MIT",
+  "scripts": {
+    "start:auth": "node src/auth/server.js",
+    "start:server": "node src/server/server.js",
+    "dev:auth": "nodemon src/auth/server.js",
+    "dev:server": "nodemon src/server/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.7.1"
+  },
+  "keywords": [
+    ""
+  ],
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}

@@ -1,0 +1,29 @@
+###
+POST http://localhost:3002/register
+Content-Type: 'application/json'
+
+{
+    "username": "user1",
+    "password": "user1",
+    "email": "user1@gmail.com"
+}
+###
+
+POST http://localhost:3002/
+Content-Type: 'application/json'
+
+{
+    "username": "user1",
+    "password": "user1",
+    "email": "user1@gmail.com"
+}
+
+###
+
+GET http://localhost:3001/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwidXNlcm5hbWUiOiJ1c2VyMSIsInBhc3N3b3JkIjoidXNlcjEiLCJlbWFpbCI6ImhhamFrIiwiaWF0IjoxNjMyNjU2NDM2LCJleHAiOjE2MzI2NTY0NjZ9.A_yRrsdMkCKQ9ZUF45YxME685TIxQJIGz2VwlFSAu48
+
+###
+
+
+###
