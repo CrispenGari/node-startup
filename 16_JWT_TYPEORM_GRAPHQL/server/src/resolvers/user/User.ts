@@ -1,12 +1,12 @@
 import { User } from "../../entities/User";
 import { ContextType } from "../../types";
-import { Ctx, Mutation, Resolver } from "type-graphql";
+import { Ctx, Query, Resolver } from "type-graphql";
 
 import jwt from "jsonwebtoken";
 
 @Resolver()
 export class UserResolver {
-  @Mutation(() => User, { nullable: true })
+  @Query(() => User, { nullable: true })
   async user(@Ctx() { req }: ContextType): Promise<User | undefined> {
     const authorization = req.headers["authorization"];
     if (!authorization) return undefined;

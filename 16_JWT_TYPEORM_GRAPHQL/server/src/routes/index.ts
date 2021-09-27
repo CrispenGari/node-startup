@@ -18,8 +18,7 @@ router.get("/", (_req: Request, res: Response) => {
 });
 
 router.post("/refresh-token", async (req: Request, res: Response) => {
-  const token = req.cookies[__cookieName__].split(" ")[1];
-
+  const token = req.cookies[__cookieName__];
   if (!token) {
     return res.status(401).json({
       code: 401,
@@ -30,7 +29,12 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
   }
   let payload: any = null;
   try {
-    payload = jwt.verify(token, process.env.REFRESH_TOKEN_SECRETE!);
+    let tokenToVerify: string = String(token)
+      .toLocaleLowerCase()
+      .includes("Bearer")
+      ? token.split(" ")[1]
+      : token;
+    payload = jwt.verify(tokenToVerify, process.env.REFRESH_TOKEN_SECRETE!);
   } catch (error) {
     console.error(error);
     return res.status(403).json({
