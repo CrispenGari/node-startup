@@ -10,8 +10,10 @@ export const isAuth: MiddlewareFn<ContextType> = (
     throw new Error("not authenticated");
   }
   try {
-    const token = authorization.split(" ")[1];
-    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!);
+    const token = authorization.includes("Bearer")
+      ? authorization.split(" ")[1]
+      : authorization;
+    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE!);
     context.payload = payload as any;
   } catch (err) {
     console.log(err);

@@ -45,9 +45,15 @@ export type MutationRevokeRefreshTokensForUserArgs = {
   userId: Scalars['String'];
 };
 
+export type PostOt = {
+  __typename?: 'PostOT';
+  caption: Scalars['String'];
+  id: Scalars['Int'];
+};
+
 export type Query = {
   __typename?: 'Query';
-  posts: Scalars['String'];
+  posts: Array<PostOt>;
   user?: Maybe<User>;
 };
 
@@ -73,7 +79,7 @@ export type LogoutMutation = { __typename?: 'Mutation', logout: boolean };
 export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: string, user?: Maybe<{ __typename?: 'User', userId: string, email: string }> };
+export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'PostOT', id: number, caption: string }>, user?: Maybe<{ __typename?: 'User', userId: string, email: string }> };
 
 export type RegisterMutationVariables = Exact<{
   email: Scalars['String'];
@@ -159,7 +165,10 @@ export type LogoutMutationResult = Apollo.MutationResult<LogoutMutation>;
 export type LogoutMutationOptions = Apollo.BaseMutationOptions<LogoutMutation, LogoutMutationVariables>;
 export const PostsDocument = gql`
     query Posts {
-  posts
+  posts {
+    id
+    caption
+  }
   user {
     userId
     email

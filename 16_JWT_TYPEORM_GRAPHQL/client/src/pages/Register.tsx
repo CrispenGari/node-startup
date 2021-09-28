@@ -1,13 +1,37 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import {
+  UserDocument,
+  useRegisterMutation,
+  UserQuery,
+} from "../generated/graphql";
 
 const Register = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+
+  const [register] = useRegisterMutation();
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
+        await register({
+          variables: {
+            email,
+            password,
+          },
+          update: (cache, { data }) => {
+            if (!data) {
+              return null;
+            }
+            cache.writeQuery<UserQuery>({
+              query: UserDocument,
+              data: {
+                user: data.register.user,
+              },
+            });
+          },
+        });
       }}
     >
       <Link to="/login">go to login</Link>

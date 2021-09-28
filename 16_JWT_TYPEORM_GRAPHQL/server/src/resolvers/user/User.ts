@@ -1,9 +1,7 @@
 import { User } from "../../entities/User";
 import { ContextType } from "../../types";
 import { Ctx, Query, Resolver } from "type-graphql";
-
 import jwt from "jsonwebtoken";
-
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
@@ -11,7 +9,9 @@ export class UserResolver {
     const authorization = req.headers["authorization"];
     if (!authorization) return undefined;
     try {
-      const token = authorization.split(" ")[0];
+      const token = String(authorization).includes("Bearer")
+        ? authorization.split(" ")[1]
+        : authorization;
       const payload: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE!);
       return await User.findOne({
         where: {

@@ -1,12 +1,12 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, RouteComponentProps, RouteProps } from "react-router-dom";
 import {
   useLoginMutation,
   UserDocument,
   UserQuery,
 } from "../generated/graphql";
 
-const Login = () => {
+const Login: React.FC<RouteComponentProps> = ({ history }) => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
 
@@ -20,17 +20,18 @@ const Login = () => {
             email,
             password,
           },
-          update: (store, { data }) => {
+          update: async (cache, { data }) => {
             if (!data) {
               return null;
             }
 
-            store.writeQuery<UserQuery>({
+            await cache.writeQuery<UserQuery>({
               query: UserDocument,
               data: {
                 user: data.login.user,
               },
             });
+            history.push("/");
           },
         });
       }}

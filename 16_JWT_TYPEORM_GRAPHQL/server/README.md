@@ -331,18 +331,20 @@ export class RevokeTokenResolver {
 The User resolver is responsible for getting the current logged in user using jwt refresh token that is stored in the browser cookie. The resolver looks as follows:
 
 ```ts
-import { User } from "src/entities/User";
-import { ContextType } from "src/types";
-import { Ctx, Mutation, Resolver } from "type-graphql";
+import { User } from "../../entities/User";
+import { ContextType } from "../../types";
+import { Ctx, Query, Resolver } from "type-graphql";
 import jwt from "jsonwebtoken";
 @Resolver()
 export class UserResolver {
-  @Mutation(() => User, { nullable: true })
+  @Query(() => User, { nullable: true })
   async user(@Ctx() { req }: ContextType): Promise<User | undefined> {
     const authorization = req.headers["authorization"];
     if (!authorization) return undefined;
     try {
-      const token = authorization.split(" ")[0];
+      const token = String(authorization).includes("Bearer")
+        ? authorization.split(" ")[1]
+        : authorization;
       const payload: any = jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE!);
       return await User.findOne({
         where: {
@@ -371,26 +373,29 @@ Is auth middleware is going to check if the user is authenticated or not in orde
 
 ```ts
 // resolvers/middleware/isAuth.ts
-
-import { ContextType } from "src/types";
+import { ContextType } from "../../../types";
 import { MiddlewareFn, NextFn } from "type-graphql";
 import jwt from "jsonwebtoken";
 export const isAuth: MiddlewareFn<ContextType> = (
-  { context: { req, payload: p } },
+  { context },
   next: NextFn
 ): Promise<any> => {
-  const authorization = req.headers["authorization"];
+  const authorization = context.req.headers["authorization"];
   if (!authorization) {
     throw new Error("not authenticated");
   }
   try {
-    const token = authorization.split(" ")[1];
-    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!);
-    p = payload as any;
+    const token = authorization.includes("Bearer")
+      ? authorization.split(" ")[1]
+      : authorization;
+    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRETE!);
+    console.log("you payload", payload);
+    context.payload = payload as any;
   } catch (err) {
     console.log(err);
     throw new Error("not authenticated");
   }
+
   return next();
 };
 ```

@@ -1,5 +1,8 @@
 query Posts {
-  posts
+  posts {
+    id
+    caption
+  }
   user {
     userId
     email

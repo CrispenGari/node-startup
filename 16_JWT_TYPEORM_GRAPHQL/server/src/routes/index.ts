@@ -20,7 +20,7 @@ router.get("/", (_req: Request, res: Response) => {
 router.post("/refresh-token", async (req: Request, res: Response) => {
   const token = req.cookies[__cookieName__];
   if (!token) {
-    return res.status(401).json({
+    return res.status(401).send({
       code: 401,
       message: "UnAuthorized",
       ok: false,
@@ -37,7 +37,7 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
     payload = jwt.verify(tokenToVerify, process.env.REFRESH_TOKEN_SECRETE!);
   } catch (error) {
     console.error(error);
-    return res.status(403).json({
+    return res.status(403).send({
       code: 403,
       message: "Forbidden",
       ok: false,
@@ -52,7 +52,7 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
   });
 
   if (!user) {
-    return res.status(403).json({
+    return res.status(403).send({
       code: 403,
       message: "Forbidden",
       ok: false,
@@ -61,7 +61,7 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
   }
 
   if (user.tokenVersion !== payload.tokenVersion) {
-    return res.status(403).json({
+    return res.status(403).send({
       code: 403,
       message: "Forbidden",
       ok: false,
@@ -69,7 +69,7 @@ router.post("/refresh-token", async (req: Request, res: Response) => {
     });
   }
   storeRefreshToken(res, createRefreshToken(user));
-  return res.status(200).json({
+  return res.status(200).send({
     code: 200,
     message: "ok",
     ok: true,
