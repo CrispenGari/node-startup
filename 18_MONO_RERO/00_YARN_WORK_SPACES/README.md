@@ -131,7 +131,7 @@ Which means everything is wired up using yarn workspaces.
 ### Final folder structure (mono repo):
 
 ```
-📁 monorepo:🗄
+📁 monorepo:
     📁 node_modules
     📁 packages
         📁 client

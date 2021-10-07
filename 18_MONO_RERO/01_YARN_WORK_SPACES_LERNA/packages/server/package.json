@@ -1,0 +1,14 @@
+{
+  "name": "@monorepo/server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  },
+  "scripts": {
+    "start": "nodemon src/index.js"
+  }
+}
