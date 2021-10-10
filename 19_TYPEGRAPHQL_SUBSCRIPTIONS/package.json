@@ -1,0 +1,41 @@
+{
+  "name": "19_TYPEGRAPHQL_SUBSCRIPTIONS",
+  "version": "1.0.0",
+  "main": "server.ts",
+  "description": "typegraphql subscriptions",
+  "author": "@crispengari",
+  "license": "MIT",
+  "keywords": [
+    ""
+  ],
+  "scripts": {
+    "watch": "tsc -w",
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts",
+    "start:fast": "ts-node-dev --respawn src/server.ts"
+  },
+  "dependencies": {
+    "apollo-server-express": "^3.3.0",
+    "class-validator": "^0.13.1",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "graphql": "^15.6.1",
+    "graphql-subscriptions": "^1.2.1",
+    "mysql2": "^2.3.0",
+    "reflect-metadata": "^0.1.13",
+    "subscriptions-transport-ws": "^0.9.19",
+    "ts-node": "^10.2.0",
+    "ts-node-dev": "^1.1.8",
+    "type-graphql": "^1.1.1",
+    "typeorm": "^0.2.38",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/graphql": "^14.5.0",
+    "@types/node": "^16.6.1",
+    "nodemon": "^2.0.12"
+  }
+}
