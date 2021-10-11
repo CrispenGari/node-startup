@@ -29,6 +29,14 @@ class PostInputType {
 
 @Resolver()
 export class PostsResolver {
+  @Query(() => Boolean)
+  async makeAllSubscriptions(@PubSub() pubSub: PubSubEngine): Promise<boolean> {
+    const posts = await Post.find({});
+    await pubSub.publish(Subscriptions.NEW_POST, null);
+    await pubSub.publish(Subscriptions.ALL_POSTS, posts);
+    return true;
+  }
+
   @Mutation(() => Post)
   async createPost(
     @Arg("caption", () => String) caption: string,
@@ -47,8 +55,9 @@ export class PostsResolver {
 
   @Subscription(() => Post, {
     topics: Subscriptions.NEW_POST,
+    nullable: true,
   })
-  newPost(@Root() postPayload: Post): Post {
+  newPost(@Root() postPayload: Post): Post | undefined {
     return postPayload;
   }
 
