@@ -12,6 +12,7 @@ export const SocketIOProvider: React.FC<{
   username: string;
   room?: string;
 }> = ({ children, username, room }) => {
+  console.log("....");
   const [socket, setSocket] = React.useState<SocketType>();
   React.useEffect(() => {
     const client = io("http://localhost:3001/", {
@@ -25,6 +26,8 @@ export const SocketIOProvider: React.FC<{
       client.close();
     };
   }, [username, room]);
+
+  socket?.on("all", (res) => console.log(res));
 
   socket?.on("user-disconnected", (res) => {
     console.log(res);
