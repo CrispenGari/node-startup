@@ -10,20 +10,33 @@ export const useSocketIO = () => {
 };
 export const SocketIOProvider: React.FC<{
   username: string;
-}> = ({ children, username }) => {
+  room?: string;
+}> = ({ children, username, room }) => {
   const [socket, setSocket] = React.useState<SocketType>();
   React.useEffect(() => {
     const client = io("http://localhost:3001/", {
       query: {
-        id: username,
+        username: username,
+        room: room!,
       },
     });
     setSocket(client);
     return () => {
       client.close();
     };
-  }, [username]);
+  }, [username, room]);
 
+  socket?.on("user-disconnected", (res) => {
+    console.log(res);
+  });
+  socket?.on("user-connected", (res) => {
+    console.log(res);
+  });
+  socket?.emit("send-message", {
+    message: "hello i'm " + username,
+    room,
+  });
+  socket?.on("new-message", (res) => console.log(res));
   return (
     <GlobalContext.Provider value={socket}>{children}</GlobalContext.Provider>
   );
