@@ -44,10 +44,16 @@ Our `package.json` will be looking as follows:
   "name": "root",
   "private": true,
   "version": "1.0.0",
+   "workspaces": {
+    "packages": [
+      "/*"
+    ]
+  },
   "devDependencies": {
     "lerna": "^4.0.0"
   }
 }
+
 ```
 
 Next we are going to create two packages `web` and `server` in the packages folder.
