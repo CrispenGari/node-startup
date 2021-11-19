@@ -1,0 +1,13 @@
+{
+  "name": "01_Simple_TEST",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "jest": "^27.3.1"
+  }
+}
