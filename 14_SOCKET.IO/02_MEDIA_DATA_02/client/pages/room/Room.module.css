@@ -1,0 +1,7 @@
+.room__videos {
+  display: flex;
+  padding: 20px;
+}
+.room__videos > video {
+  width: 200px;
+}
