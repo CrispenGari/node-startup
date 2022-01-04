@@ -1,0 +1,26 @@
+.videos {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.video {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 10px;
+  padding: 5px;
+}
+.video > video {
+  width: 100%;
+  object-fit: contain;
+}
+
+.video > h1 {
+  font-size: 0.9rem;
+  user-select: none;
+  color: black;
+}

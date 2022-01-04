@@ -1,0 +1,18 @@
+.notification {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 200px;
+  display: flex;
+  flex-direction: column;
+  margin: 20px auto;
+}
+.notification > h1 {
+  font-size: 1rem;
+  color: cornflowerblue;
+}
+.notification > button {
+  margin-top: 10px;
+  padding: 3px;
+  cursor: pointer;
+  outline: none;
+}
