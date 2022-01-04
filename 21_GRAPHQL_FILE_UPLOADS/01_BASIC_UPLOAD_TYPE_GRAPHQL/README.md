@@ -257,7 +257,8 @@ we get the following response:
   "data": {
     "getFiles": [
       "http://localhost:3001/images/0.png",
-      "http://localhost:3001/images/_programmers.life_20200617_22.png"
+      "http://localhost:3001/images/_programmers.life_20200617_22.png",
+      ..
     ]
   }
 }
