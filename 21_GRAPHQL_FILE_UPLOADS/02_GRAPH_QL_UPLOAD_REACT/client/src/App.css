@@ -1,0 +1,13 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.app{
+
+}
+.app__images>img{
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
