@@ -11,7 +11,7 @@ Authentication for web applications suing different passport strategies.
 <img src="https://img.shields.io/static/v1?label=package&message=express&color=important"/>
 
 </p>
-<p align="center"><img src=/node-js-login-using-passport.jpg" width="100%"/></p>
+<p align="center"><img src="https://github.com/CrispenGari/node-backend/blob/main/00_Passport.js/node-js-login-using-passport.jpg" width="100%"/></p>
 
 ### Passport Strategies
 
