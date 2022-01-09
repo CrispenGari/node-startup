@@ -1,0 +1,15 @@
+{
+  "name": "01_REST_API",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "koa": "^2.13.4",
+    "koa-body": "^4.2.0",
+    "koa-router": "^10.1.1"
+  }
+}
