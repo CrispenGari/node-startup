@@ -2,7 +2,7 @@ import Koa from "koa";
 import koaBody from "koa-body";
 import router from "./routes";
 
-const app = new Koa();
+export const app = new Koa();
 const PORT = process.env.PORT || 3001;
 
 app.use(koaBody());

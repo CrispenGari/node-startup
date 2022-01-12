@@ -14,7 +14,7 @@ router.post("/new", async (ctx, next) => {
       [title, decription]
     );
     ctx.response.status = 201;
-    ctx.body = data.rows;
+    ctx.body = data.rows[0];
     next();
   } catch (error) {
     ctx.response.status = 500;
