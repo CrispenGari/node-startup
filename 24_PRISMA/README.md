@@ -2,7 +2,7 @@
 
 In these series, we are going to look on how we can work with prisma.
 
-<img src="/prisma.png" alt="" width="100%"/>
+<img src="https://github.com/CrispenGari/node-backend/blob/main/24_PRISMA/prisma.png" alt="" width="100%"/>
 
 ### What is prisma?
 
