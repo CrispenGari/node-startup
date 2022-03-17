@@ -22,4 +22,5 @@ This repository contains some nodejs applications and features using different t
 7. [x] TypeORM
 8. [x] MikroORM
 9. [x] Passport.js
+10. [x] Prisma.js
 
