@@ -1,0 +1,50 @@
+
+### Getting all the users
+GET http://localhost:3001/api/user/all
+Content-Type: application/json
+
+### Getting a user by id
+GET http://localhost:3001/api/user/6
+Content-Type: application/json
+
+
+### Creating the user
+
+POST http://localhost:3001/api/user/create
+Content-Type: application/json
+
+{
+    "firstName": "Name4",
+    "lastName": "LastName4",
+    "email": "name4@gmail.com",
+    "profile":{
+      "gender": "male",
+      "profile": "http://localhost:3001/strogage/profile/name4.jpg"
+    }
+}
+
+### Creating a post
+
+PUT http://localhost:3001/api/user/6/post/create
+Content-Type: application/json
+
+{
+  "title": "My second Post",
+  "category": "SPORT, NEWS, BETTING"
+}
+
+
+### Updating a user
+
+PUT http://localhost:3001/api/user/3/update
+Content-Type: application/json
+
+{
+  "firstName": "Name0",
+  "lastName": "LastName0"
+}
+
+### Deleting a user
+
+DELETE http://localhost:3001/api/user/3/delete
+Content-Type: application/json
