@@ -2,7 +2,7 @@
 
 In this sub-repository we are going to have a look on running our applications in containers. We are going to have a closer overview on `Docker`.
 
-<img src="https://github.com/CrispenGari/node-backend/tree/main/25_DOCKER/docker_architecture.svg" alt="" width="100%">
+<img src="https://github.com/CrispenGari/node-backend/blob/main/25_DOCKER/docker_architecture.svg" alt="" width="100%">
 
 ### What is Docker?
 
