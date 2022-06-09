@@ -209,6 +209,14 @@ docker run mysql
 
 > Again with the `run` command we can specify the version of the image because by default docker will download the latest. `docker run mysql:7.2`
 
+With the `run` command we can be able to pass in options which can be found [here](https://docs.docker.com/engine/reference/commandline/run/) for example the `-d` or `detach` flag or option is passed and allows a container to run in the background and returns a container id.
+
+```shell
+docker run -d redis
+# or
+docker run -detach redis
+```
+
 5. ps
 
 This command is used to list all running containers
@@ -275,6 +283,110 @@ This command is used to remove the images in docker for example if we want to re
 
 ```shell
 docker rmi redis
+```
+
+### How can I restart a container?
+
+To restart a container you need a container id for example `7878003b56ab` and run the following commands.
+
+```shell
+docker stop 7878003b56ab
+# then
+docker start 7878003b56ab
+```
+
+### Having a problem in starting docker after your computer restarts?
+
+If docker keeps on saying `starting` after you restarts your computer you will probably want to run the following 2 commands:
+
+```shell
+wsl --unregister docker-desktop
+wsl --unregister docker-desktop-data
+```
+
+> **Note:** _It should be noted that this removes all docker containers and data. (WLS: Unregisters the distribution and deletes the root filesystem.)_
+
+After doing that you can start docker again.
+
+### Port Binding
+
+Let's say we have two redis images that are of different version. If i start these two containers and run the following command:
+
+```shell
+docker ps
+```
+
+The following will be the output:
+
+```shell
+CONTAINER ID   IMAGE       COMMAND                  CREATED          STATUS         PORTS      NAMES
+a517c94a3df1   redis:6.2   "docker-entrypoint.s…"   10 seconds ago   Up 6 seconds   6379/tcp   youthful_sutherland
+1acb4eaceeb5   redis       "docker-entrypoint.s…"   4 minutes ago    Up 4 minutes   6379/tcp   zealous_kalam
+```
+
+These two containers are running on the same port `6379/tcp` we need to use port binding to enable these containers to run on our custom port. To do that we use the `-p` option to bind our container with custom port to the default port which is `6379`
+
+```shell
+docker run -p<Custom Port>:<Container Port>
+# example
+docker run -d -p3002:6379 redis
+docker run -d -p3003:6379 redis:6.2
+```
+
+> **Note:** _Before binding the ports we need to stop our containers first._
+
+Now if we run the command:
+
+```shell
+docker ps
+```
+
+The output will be as follows:
+
+```shell
+CONTAINER ID   IMAGE       COMMAND                  CREATED          STATUS          PORTS                    NAMES
+c63317a97cb9   redis:6.2   "docker-entrypoint.s…"   18 seconds ago   Up 14 seconds   0.0.0.0:3003->6379/tcp   romantic_buck
+e066896a0464   redis       "docker-entrypoint.s…"   26 seconds ago   Up 21 seconds   0.0.0.0:3002->6379/tcp   hopeful_meitner
+
+```
+
+### Debugging containers.
+
+In this section we are going to have a look at how we can debug our containers. We are going to look at some various docker commands for debugging containers
+
+1. logs
+
+This command fetchs the logs for the container example:
+
+```shell
+docker logs <container id>
+# example
+docker logs e066896a0464
+```
+
+Alternatively you can pass the container name instead of a container id.
+
+> Note that with docker you can give a container a name in the `run` command by running the following command.:
+
+```shell
+docker run -d -p:3001:6379 --name redis-new redis
+```
+
+Now you can view the `logs` by running the following command:
+
+```shell
+docker logs redis-new
+```
+
+2. exec
+
+This command is used to run a new command in a running container.
+
+```shell
+docker exec -it <container_id|container_name> /bin/bash
+
+# example
+docker exec -it redis-new /bin/bash
 ```
 
 ### Refs
