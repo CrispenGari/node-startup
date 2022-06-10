@@ -1,0 +1,17 @@
+### all todos
+GET http://localhost:3001/todos
+
+### Single todo
+
+GET http://localhost:3001/todo/62a2fbe73460ce2ca64319d4
+
+
+### Creating todo
+POST http://localhost:3001/todo/create
+Content-Type: application/json
+
+{
+    "title":"cleaning",
+    "completed": false
+}
+
