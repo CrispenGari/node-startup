@@ -17,6 +17,15 @@ This repository has two main languages which are:
 - typescript(ts)
 ```
 
+### Package managers
+
+This repository uses the following package managers.
+
+```shell
+- yarn
+- npm
+```
+
 ### Include
 
 This repository also include sub-repositories which are:
