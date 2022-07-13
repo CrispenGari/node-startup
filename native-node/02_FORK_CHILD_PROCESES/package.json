@@ -1,0 +1,16 @@
+{
+  "name": "02_CHILD_PROCESES",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
