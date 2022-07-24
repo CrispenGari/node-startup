@@ -9,9 +9,14 @@ services: # defines the services that you want to run
       - MONGO_INITDB_ROOT_PASSWORD=password
   mongo-express:
     image: mongo-express
+    restart: always
     ports:
       - "8081:8081"
+    depends_on:
+      - mongodb
+
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
       - ME_CONFIG_MONGODB_ADMINPASSWORD=password
       - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true

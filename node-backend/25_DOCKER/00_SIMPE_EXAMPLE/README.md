@@ -347,18 +347,23 @@ services: # defines the services that you want to run
   mongodb: # the container name
     image: mongo # the image name
     ports: # port binding
-      - 27017:27017
+      - "27017:27017"
     environment: # environmental variables
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=password
   mongo-express:
     image: mongo-express
+    restart: always
     ports:
-      - 8081:8081
+      - "8081:8081"
+    depends_on:
+      - mongodb
+
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
       - ME_CONFIG_MONGODB_ADMINPASSWORD=password
       - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
 ```
 
 > Note that we don't need to specify the network as it will be created for us with `docker-compose`.
