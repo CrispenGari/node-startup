@@ -1,70 +1,53 @@
+//
+import Todos from "../model";
 import { Request, Response, Router } from "express";
-import { MongoClient } from "mongodb";
+import mongoose from "mongoose";
 const router: Router = Router();
 
-const url: string = `mongodb://admin:password@localhost:27017`;
-const databaseName: string = "todos";
-
-router.get("/todos", async (_req: Request, res: Response) => {
-  await MongoClient.connect(
-    url,
-    {
-      auth: {
-        username: "admin",
-        password: "password",
-      },
-    },
-    (err: any, client) => {
-      if (err) {
-        console.log(err.message);
-        return;
-      }
-      const db = client?.db(databaseName);
-      if (!db) {
-        return res.status(500).json({
-          status: 500,
-          error: "database not found",
-        });
-      }
-      return res.status(200).send(db.collection("todos").find({}));
-    }
-  );
+const url: string = `mongodb://admin:password@0.0.0.0:27017`;
+mongoose.connect(url, {}, (err) => {
+  if (err) {
+    throw err;
+  }
+  console.log("connected to mongodb.");
+});
+mongoose.connection.once("open", (err) => {
+  if (err) {
+    throw err;
+  }
+  console.log("Ready to accept connections");
 });
 
-router.get("/todo/:id", async (req, res) => {
+router.get("/todos", (_req: Request, res: Response) => {
+  Todos.find({}, (error: any, doc: any) => {
+    if (error) {
+      throw error;
+    }
+    if (!doc) {
+      return res.status(404).send("No todos found.");
+    }
+    return res.status(200).send(doc);
+  });
+});
+
+router.get("/todo/:id", (req, res) => {
   const { id } = req.params;
-
-  await MongoClient.connect(url, {}, (err: any, client) => {
-    if (err) {
-      throw err;
+  Todos.findById(id, (error: any, doc: any) => {
+    if (error) {
+      throw error;
     }
-    const db = client?.db(databaseName);
-    if (!db) {
-      return res.status(500).json({
-        status: 500,
-        error: "database not found",
-      });
+    if (!doc) {
+      return res.status(404).send("Todo not found.");
     }
-    return res.status(200).send(db.collection("todos").find({ id }));
+    return res.status(200).send(doc);
   });
 });
 
-router.post("/todo/create", async (req: Request, res: Response) => {
+router.post("/todo/create", (req: Request, res: Response) => {
   const data = req.body;
-
-  await MongoClient.connect(url, {}, (err: any, client) => {
-    if (err) {
-      throw err;
-    }
-    const db = client?.db(databaseName);
-    if (!db) {
-      return res.status(500).json({
-        status: 500,
-        error: "database not found",
-      });
-    }
-    return res.status(201).send(db.collection("todos").insertOne({ ...data }));
-  });
+  const todo = new Todos(data);
+  todo.save();
+  res.status(201).send(todo);
 });
 
 export default router;
