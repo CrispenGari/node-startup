@@ -4,7 +4,7 @@ import { Request, Response, Router } from "express";
 import mongoose from "mongoose";
 const router: Router = Router();
 
-const url: string = `mongodb://admin:password@0.0.0.0:27017`;
+const url: string = `mongodb://admin:password@localhost:27017`;
 mongoose.connect(url, {}, (err) => {
   if (err) {
     throw err;

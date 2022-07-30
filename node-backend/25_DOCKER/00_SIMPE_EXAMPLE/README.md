@@ -410,6 +410,85 @@ Removing network app_default
 - You don't need to worry about creating the docker network because it will be created for you.
 - Easy to configure and modify since it is a file you can edit it and make some changes.
 
+### Docker file.
+
+Now that we have developed our application. We want to create a docker image for our application. A docker file essentially it is a blueprint for creating docker images. Let's have a look at how we can create an image based on our application. So let's create a docker file to create an image for our application.
+
+> Note that the docker file must have the name `Dockerfile`. After that we are going to add the following code in that docker file.
+
+```shell
+# from the base image(you can specify the version of the image)
+FROM node # e.g FROM node:18-aphine
+# setting enviromental variables (optional since we have already set them.)
+ENV MONGO_DB_USERNAME=admin
+ENV MONGO_DB_PWD=password
+# creating a folder app (this folder will be created inside a container)
+RUN mkdir -p /home/app
+
+# copying files and folders of our app in the (app) directory
+COPY . /home/app
+
+# the entry point command (the reason we did not use the RUN command is that we can have multiple run with only one CMD [entry point command])
+CMD [ "node", "/home/app/dist/server.js" ]
+```
+
+> Note that in the `CMD` command we are going to run the compiled version of our app.
+
+Now that we have our docker file, let's build an image based on our docker file. In order to do that we are going to run the following command:
+
+```shell
+docker build -t myapp:1.0 .
+```
+
+> Note that `1.0` here is the version of our image. And the last parameter which is `.` specifies the location of our docker file.
+
+After it has finished running, we can be able to check the images that we have on our computer by running the images docker command as follows:
+
+```shell
+docker images
+```
+
+Output in my case:
+
+```shell
+REPOSITORY      TAG       IMAGE ID       CREATED         SIZE
+myapp           1.0       9a3fc1e5b339   2 minutes ago   1.09GB
+redis           latest    dd8125f93b94   7 weeks ago     117MB
+mongo           latest    1d3f6d5230f6   7 weeks ago     696MB
+redis           6.2       c0988daf01f5   2 months ago    113MB
+mongo-express   latest    2d2fb2cabc8f   9 months ago    136MB
+```
+
+Now we can be able to run the image by running the `run` docker command
+
+```shell
+docker run myapp:1.0
+```
+
+We will be able to see the following logs in the console:
+
+```shell
+The server is running on port: 3001
+```
+
+We can also be able to check all the images that are running using the `ps` command as follows:
+
+```shell
+docker ps
+```
+
+Output:
+
+```shell
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS
+   NAMES
+8e38a6e2570e   myapp:1.0       "docker-entrypoint.s…"   12 seconds ago   Up 9 seconds
+   stupefied_bohr
+2196e961a20f   mongo-express   "tini -- /docker-ent…"   39 minutes ago   Up 38 minutes   0.0.0.0:8081->8081/tcp
+   app-mongo-express-1
+901ea18d6f4b   mongo           "docker-entrypoint.s…"   39 minutes ago   Up 38 minutes   0.0.0.0:27017->27017/tcp   app-mongodb-1
+```
+
 ### Refs
 
 1. [Docker Compose](https://docs.docker.com/compose/)
