@@ -333,7 +333,11 @@ docker run -d -p3002:6379 redis
 docker run -d -p3003:6379 redis:6.2
 ```
 
-> **Note:** _Before binding the ports we need to stop our containers first._
+> **Note:** _Before binding the ports we need to stop our containers first. Also note that you can map a container to multiple ports by specifying another `-p` flag. for example:_
+
+```shell
+docker run -d -p 3001:6379 -p3002:6379 redis
+```
 
 Now if we run the command:
 
@@ -388,6 +392,182 @@ docker exec -it <container_id|container_name> /bin/bash
 # example
 docker exec -it redis-new /bin/bash
 ```
+
+### Removing Containers
+
+To remove containers in docker we run the following command:
+
+```shell
+docker rm <container_id>
+```
+
+Let's say we want to remove all the containers that we have run before, we can run the following command:
+
+```shell
+docker rm $(docker ps -aq)
+```
+
+Where the `docker ps -aq` returns a list of all container ids.
+
+If i run:
+
+```shell
+docker ps -aq
+```
+
+You will get the output that is similar to this:
+
+```
+999f483b6e75
+384033af38f8
+e6bff9a896a4
+4d73646ff998
+681ac517563a
+4d5852b2c65f
+37b981085162
+1a3a0d11d562
+e29780d541b4
+8e38a6e2570e
+ff7feecf21d5
+19ad68bef537
+c63317a97cb9
+e066896a0464
+a517c94a3df1
+8dcba97d0dde
+1acb4eaceeb5
+```
+
+### Volumes
+
+Volumes allows us to persist data that is being used by docker containers. It also allows us to share data between the host and the container.
+
+### Creating a Volume
+
+To create a volume we run the following command:
+
+```shell
+docker volume create <volume_name>
+# example
+docker volume create my-vol
+```
+
+### Checking Volumes
+
+To check the volumes that are available we run the following commad:
+
+```shell
+docker volume ls
+```
+
+### Deleting a Volume
+
+To delete a volume we run the following command
+
+```shell
+docker volume rm  <volume_name>
+```
+
+### Starting a container with a Volume
+
+There are two ways of starting a container with a volume, using the `--mount` or the `-v`. I'm going to practically show how we can start an `nginx` with these different ways.
+
+```shell
+docker run -d --name web --mount source=my-vol,target=/app nginx
+```
+
+If you run `docker inspect web` under the mount section we will be able to see the following:
+
+```json
+{
+  "Mounts": [
+    {
+      "Type": "volume",
+      "Name": "my-vol",
+      "Source": "/var/lib/docker/volumes/my-vol/_data",
+      "Destination": "/app",
+      "Driver": "local",
+      "Mode": "z",
+      "RW": true,
+      "Propagation": ""
+    }
+  ]
+}
+```
+
+We can do the same with the `-v`
+
+```shell
+docker run -d --name web -v my-vol:/app nginx:latest
+```
+
+You can specify volumes in the docker compose file as follows:
+
+```yml
+version: "3.9"
+services:
+  frontend:
+    image: node:lts
+    volumes:
+      - myapp:/home/node/app
+volumes:
+  myapp:
+```
+
+You can create a `readonly` volume by specifying `ro` when starting a container for example:
+
+```shell
+docker run -d --name=nginxtest -v nginx-vol:/usr/share/nginx/html:ro nginx:latest
+```
+
+If we start the `nginx` server as follows:
+
+```shell
+docker run -d -p 3000:80 --name=nginxtest -v nginx-vol:/usr/share/nginx/html:ro nginx:latest
+```
+
+And we go to `localhost:3000` we will see a basic nginx welcome page. We want to override that by the use of volumes. So we are going to create a new folder and create an `index.html` file in that folder. We will then open the command prompt in that folder and run the following command:
+
+```shell
+docker run --name website -v $(pwd):/usr/share/nginx/html:ro -d -p 3001:80 nginx
+# Or using absolute path for the host
+docker run --name website -v C:\Users\crisp\OneDrive\Desktop\nginx:/usr/share/nginx/html:ro -d -p 3001:80 nginx
+```
+
+Now if we open `localhost:3001` we will be able to see the contents in our `index.html` file that is on the host at `C:\Users\crisp\OneDrive\Desktop\nginx`. Let's see what is happening in the container using the `exec` command:
+
+```shell
+docker exec -it website bash
+```
+
+We can check the contents of our html by running the following commands
+
+```shell
+root@73577575aa4d:/# cd /usr/share/nginx
+root@73577575aa4d:/usr/share/nginx# cd html
+root@73577575aa4d:/usr/share/nginx/html# cat index.html
+<h1>Hello there!!</h1>root@73577575aa4d:/usr/share/nginx/html#
+```
+
+Now let's try to create a new file called about.html in the container so that it will reflect on the file system of the host. First we need to make sure that our volume is not `read-only`. So let's restart our `website` container and remove the readonly property so that we can be able to create a file from the container to the host.
+
+```shell
+docker run --name website -v C:\Users\crisp\OneDrive\Desktop\nginx:/usr/share/nginx/html -d -p 3001:80 nginx
+```
+
+Now in the container we will create a file called `about.html` as follows
+
+```shell
+docker exec -it website bash
+
+# Then
+root@46b7c7b9d48e:/# cd /usr/share/nginx/html
+root@46b7c7b9d48e:/usr/share/nginx/html# touch about.html
+root@46b7c7b9d48e:/usr/share/nginx/html# ls
+about.html  index.html
+root@46b7c7b9d48e:/usr/share/nginx/html#
+```
+
+So the `about.html` file will be reflated on our file system at `C:\Users\crisp\OneDrive\Desktop\nginx`
 
 ### Refs
 
