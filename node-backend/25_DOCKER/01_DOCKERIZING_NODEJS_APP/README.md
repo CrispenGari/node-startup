@@ -150,3 +150,48 @@ And if we go to `http://localhost:3001` we will get the following response:
   "message": "Hello world from Docker."
 }
 ```
+
+Now we want to make use of volumes so that our server restart in the container when we make changes from the host. First we need to change our `package.json` start script to use `nodemon` as follows:
+
+```json
+{
+  ....
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.1",
+    "nodemon": "^2.0.19"
+  }
+}
+```
+
+After that we will then need to rebuild our image by running the following command:
+
+```shell
+docker build -t my-app:1.0 .
+```
+
+Now when we are starting our container we need to specify the volume from the host maped to the volume in the container itself as follows:
+
+```shell
+docker run -v C:\Users\crisp\OneDrive\Documents\Node\node-backend\25_DOCKER\01_DOCKERIZING_NODEJS_APP:/app -p:3001:3001 my-app:1.0
+```
+
+We can use a docker compose to start our application with containers as follows:
+
+```yml
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "3001:3001"
+    volumes:
+      - C:\Users\crisp\OneDrive\Documents\Node\node-backend\25_DOCKER\01_DOCKERIZING_NODEJS_APP:/app
+  db:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+```
