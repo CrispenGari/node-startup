@@ -1,0 +1,16 @@
+{
+  "name": "00_GETTING_STARTED",
+  "version": "1.0.0",
+  "description": "getting started with graphql-yoga",
+  "main": "index.js",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "graphql": "^16.6.0",
+    "graphql-yoga": "^3.1.1"
+  }
+}
