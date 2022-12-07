@@ -8,7 +8,6 @@ import USER_QUERY from "../graphql/queries/user";
 interface Props {}
 const Home: NextPage<Props> = () => {
   const { data: user, loading: loadingUser } = useQuery(USER_QUERY);
-
   const router = useRouter();
   React.useEffect(() => {
     let mounted: boolean = true;
