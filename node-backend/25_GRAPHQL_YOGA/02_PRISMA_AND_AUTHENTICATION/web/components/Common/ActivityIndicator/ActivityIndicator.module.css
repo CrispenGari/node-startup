@@ -1,0 +1,17 @@
+.activity__indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+  border: 2px solid cornflowerblue;
+  border-left: 2px solid darkcyan;
+  animation: rotate 1s none 0s infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

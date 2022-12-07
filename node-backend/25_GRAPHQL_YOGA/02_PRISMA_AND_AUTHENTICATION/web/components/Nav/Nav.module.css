@@ -1,0 +1,25 @@
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  width: 100%;
+  padding: 20px 50px;
+  border-bottom: 1px solid lightblue;
+}
+.nav > div {
+  display: flex;
+  align-items: center;
+}
+.nav > div > h1 {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-right: 10px;
+}
+.nav > div > button {
+  outline: none;
+  border: none;
+  padding: 5px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}

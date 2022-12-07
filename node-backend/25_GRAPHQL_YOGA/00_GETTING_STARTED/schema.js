@@ -1,5 +1,4 @@
 import { createSchema, createPubSub } from "graphql-yoga";
-
 const pubSub = createPubSub();
 export const schema = createSchema({
   typeDefs: `
