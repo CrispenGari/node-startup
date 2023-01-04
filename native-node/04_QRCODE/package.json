@@ -1,0 +1,14 @@
+{
+  "name": "04_QRCODE",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.1"
+  }
+}
