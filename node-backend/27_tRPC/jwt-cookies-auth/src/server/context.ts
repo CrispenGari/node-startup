@@ -1,5 +1,7 @@
+import { User } from "@prisma/client";
 import { NextApiResponse, NextApiRequest } from "next";
 import { prisma } from "../utils/prisma";
+
 export const createContext = ({
   req,
   res,
