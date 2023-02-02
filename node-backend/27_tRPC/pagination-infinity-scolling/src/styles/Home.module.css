@@ -1,0 +1,61 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+.home__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 500px;
+  margin: 0px auto;
+}
+.home__main > form {
+  background-color: #f5f5f5;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+.home__main > form > textarea {
+  font-size: 1.2rem;
+  outline: none;
+  border: 1px solid cornflowerblue;
+  border-radius: 5px;
+  flex: 1;
+  padding: 5px;
+  resize: none;
+}
+.home__main > form > button {
+  margin: 10px 0;
+  background-color: cornflowerblue;
+  cursor: pointer;
+  color: white;
+  width: 100px;
+  border-radius: 5px;
+  padding: 5px 0;
+  border: none;
+}
+.home__main__main {
+  background-color: white;
+  padding-top: 10;
+}
+.home__post {
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+  padding: 5px;
+  margin-bottom: 3px;
+  border-radius: 5px;
+  user-select: none;
+}
+.home__post > h1 {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: cornflowerblue;
+}
