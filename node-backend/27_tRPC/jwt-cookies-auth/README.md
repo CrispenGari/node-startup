@@ -2,9 +2,9 @@
 
 In this Readme we are going to walk through how to use `tRPC` in a `monorepo` project with `Next.js`.
 
-### What is TRPC?
+### What is tRPC?
 
-(Transactional Remote Procedure Call) - End-to-end typesafe APIs made easy. Automatic typesafety & autocompletion inferred from your API-paths, their input data, & outputs .
+(TypeScript Remote Procedure Call) - End-to-end typesafe APIs made easy. Automatic typesafety & autocompletion inferred from your API-paths, their input data, & outputs .
 
 ### Getting started
 
