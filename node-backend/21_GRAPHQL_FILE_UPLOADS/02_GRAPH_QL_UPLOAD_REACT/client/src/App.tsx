@@ -3,18 +3,47 @@ import "./App.css";
 import { gql, useMutation, useQuery } from "@apollo/client";
 const ALL_FILES_QUERY = gql`
   query {
-    getFiles
+    hello
   }
 `;
 
 const UPLOAD_MUTATION = gql`
-  mutation UploadFile($picture: Upload!) {
-    uploadFile(picture: $picture)
+  mutation PredictSnakeSpicie($input: PredictionInputType!) {
+    predictSnake(input: $input) {
+      error {
+        field
+        message
+      }
+      ok
+      prediction {
+        topPrediction {
+          label
+          probability
+          className
+          specie {
+            id
+            specieName
+            commonName
+          }
+        }
+        predictions {
+          label
+          probability
+          className
+          specie {
+            id
+            specieName
+            commonName
+          }
+        }
+      }
+    }
   }
 `;
 function App() {
   const { data, loading } = useQuery(ALL_FILES_QUERY);
 
+  console.log(data);
   const [upload, { data: D }] = useMutation(UPLOAD_MUTATION, {
     refetchQueries: [
       {
@@ -28,6 +57,8 @@ function App() {
     return <p>loading</p>;
   }
 
+  console.log(D);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setImage({
       valid: e.target.validity.valid,
@@ -38,9 +69,10 @@ function App() {
   const postImage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (image?.valid) {
+      console.log(image.image);
       await upload({
         variables: {
-          picture: image.image,
+          input: { image: image.image },
         },
       });
     } else {

@@ -1,6 +1,6 @@
-### tRPC and React
+### tRPC and React Native
 
-In this repository we are going to show how we can use `trpc` together with `react-js` as a `mono-repo` project using `yarn-workspaces`.
+In this repository we are going to show how we can use `trpc` together with `react-native` as a `mono-repo` project using `yarn-workspaces`.
 
 ### Getting started
 
@@ -15,7 +15,7 @@ First you will need to create a file `package.json` in the root directory of you
 }
 ```
 
-After that we will need to create a folder called `packages` this is where our `trpc-node` app will live together with the client `react` app. Next we are going to install `concurrently` module that allows us to run the client and `trpc` server at the same time.
+After that we will need to create a folder called `packages` this is where our `trpc-node` app will live together with the client `react-native` app. Next we are going to install `concurrently` module that allows us to run the client and `trpc` server at the same time.
 
 ```shell
 yarn add -W -D concurrently wsrun
@@ -181,54 +181,40 @@ export type AppRouter = typeof appRouter;
 
 Now we have a running API we can now go to our react client and set it up.
 
-### Setting Up React client
+### Setting Up React Native client
 
-On our react client we need to create a react app first by running the following command:
+On our react-native client we need to create an expo app first by running the following command:
 
 ```shell
-yarn create react-app client --template typescript
+npx expo init mobile
 ```
 
-> Make sure that you are in the `packages` folder.
+> Make sure that you are in the `packages` folder, and you selected `typescript` as a language.
 
-Inside the `client` the `tsconfig.json` will look as follows:
+The `tsconfig.json` file on the `mobile` will look as follows:
 
 ```json
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": false,
-    "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "include": ["src"]
+    "strict": true
+  }
 }
 ```
 
-When it if finished we need to navigate to the `packages/client` and install the `server` package in our mono repo by running the following command
+When it if finished we need to navigate to the `packages/mobile` and install the `server` package in our mono repo by running the following command
 
 ```
 yarn add server@1.0.0
 ```
 
-After installing the `server` package on the client we are then going to install the packages that we will need to setup our `tRPC` on the client by running the following command:
+After installing the `server` package on the mobile package we are then going to install the packages that we will need to setup our `tRPC` on the mobile package by running the following command:
 
 ```shell
 yarn add @trpc/client@next @trpc/server@next @trpc/react-query@next @tanstack/react-query
 ```
 
-When we are done the we will need to create a folder in our `client` package called `src/utils` and create a file called `trpc.ts` and add the following code to it:
+When we are done the we will need to create a folder in our `mobile` package called `src/utils` and create a file called `trpc.ts` and add the following code to it:
 
 ```ts
 import { createTRPCReact } from "@trpc/react-query";
@@ -245,6 +231,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { trpc } from "../utils/trpc";
 import superjson from "superjson";
+import { url } from "../utils";
 interface Props {
   children: React.ReactNode;
 }
@@ -252,7 +239,7 @@ const TRPCProvider: React.FC<Props> = ({ children }) => {
   const links = [
     loggerLink(),
     httpBatchLink({
-      url: "http://localhost:3001/api/trpc",
+      url,
     }),
   ];
   const [queryClient] = useState(() => new QueryClient());
@@ -280,50 +267,95 @@ We will just need to wrap our application inside `trpc.Provider` which takes in 
 </trpc.Provider>
 ```
 
-Now in the `index.tsx` we will just wrap the `<App/>` with the `TRPCProvider` as follows:
+So the `url` is coming from `constants/index.ts` which looks as follows:
 
 ```ts
-import React from "react";
-import ReactDOM from "react-dom/client";
-import "./index.css";
-import App from "./App";
-import TRPCProvider from "./providers/TRPCProvider";
-
-const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
-);
-root.render(
-  <React.StrictMode>
-    <TRPCProvider>
-      <App />
-    </TRPCProvider>
-  </React.StrictMode>
-);
+export const url: string = `https://aae2-197-98-127-119.ngrok.io/api/trpc`;
 ```
 
-Now we can start making queries and mutations from the `server` with `E2E` typescript safe procedure calling. Note that if you make the changes on the server you don't need to install the `server` package again on the client.
+I'm using `ngrok` to forward request over `http` on port `3001` which is the server port, by running the following command on `ngrok` command line that is on my computer.
 
-### Hello World
+```shell
+ngrok http 3001
+```
 
-Now we can open the `App.tsx` and query a `hello-world` query from the `server`
+This will forward request on port `3001` and give me a `remote` url that will allow me to use my phone to send request on the server that is on my local computer.
+
+```shell
+Forwarding                    http://aae2-197-98-127-119.ngrok.io -> http://localhost:3001
+Forwarding                    https://aae2-197-98-127-119.ngrok.io -> http://localhost:3001
+```
+
+Now in the `App.tsx` we will just wrap our `Routes` with the `TRPCProvider` as follows:
 
 ```ts
-import React from "react";
-import { trpc } from "./utils/trpc";
+import { LogBox, View } from "react-native";
+import TRPCProvider from "./src/providers/TRPCProvider";
+import Routes from "./src/routes/Routes";
 
-interface Props {}
-const App: React.FC<Props> = () => {
-  const { data, isFetched, isLoading } = trpc.hello.useQuery({ name: " TRPC" });
+LogBox.ignoreLogs;
+LogBox.ignoreAllLogs();
+const App = () => {
   return (
-    <div className="App">
-      <pre>
-        <code>{JSON.stringify({ data, isFetched, isLoading }, null, 2)}</code>
-      </pre>
-    </div>
+    <TRPCProvider>
+      <View style={{ flex: 1 }}>
+        <Routes />
+      </View>
+    </TRPCProvider>
   );
 };
 
 export default App;
+```
+
+Now we can start making queries and mutations from the `server` with `E2E` typescript safe procedure calling. Note that if you make the changes on the server you don't need to install the `server` package again on the client.
+
+In the `package.json` of the `mobile` you will need to point where `main` to `../../node_modules/expo/AppEntry.js`
+
+```json
+{
+  "name": "mobile",
+  "version": "1.0.0",
+  "main": "../../node_modules/expo/AppEntry.js"
+}
+```
+
+Then open the `node_modules/expo/AppEntry.js` file and add modify it so that it can point to where your `App.tsx` file is.
+
+```ts
+// node_modules/expo/AppEntry.js
+import registerRootComponent from "expo/build/launch/registerRootComponent";
+import App from "../../packages/mobile/App";
+
+registerRootComponent(App);
+```
+
+### Hello World
+
+Now we can open the `Routes.tsx` and query a `hello-world` query from the `server`
+
+```ts
+import { View, Text } from "react-native";
+import React from "react";
+import { trpc } from "../utils/trpc";
+
+// Your screen navigation will go here
+const Routes = () => {
+  const { data, isFetched, isLoading } = trpc.hello.useQuery({ name: " TRPC" });
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Text>{JSON.stringify({ data, isFetched, isLoading }, null, 2)}</Text>
+    </View>
+  );
+};
+
+export default Routes;
 ```
 
 ### Starting the Server
@@ -334,7 +366,7 @@ To start the server you need to navigate to the root folder and run the followin
 yarn start
 ```
 
-Both the `client` and the `server` packages will start at the same time and on the client you will be able to see some output in the dom
+Both the `mobile` and the `server` packages will start at the same time and on the mobile-client you will be able to see some output in the dom
 
 Output:
 
