@@ -2,6 +2,8 @@
 
 Building APIs using `fastify`
 
+<img src="cover.png" width="100%" alt="cover"/>
+
 ### Getting started
 
 First you need to initialize a node application by running the following command:
