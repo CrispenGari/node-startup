@@ -1,0 +1,33 @@
+# Getting all movies
+
+GET http://localhost:3001/api/movies/all
+
+#### Getting a movie
+
+
+GET http://localhost:3001/api/movies/one/1
+
+### Adding a movie
+
+POST http://localhost:3001/api/movies/new
+Content-Type: application/json
+
+{
+    "decription": "this is a simple movie.",
+    "title": "title 3"
+}
+
+### Updating a movie
+
+PUT http://localhost:3001/api/movies/update/1
+Content-Type: application/json
+
+{
+    "decription": "this is a simple movie.",
+    "title": "title 5"
+}
+
+### Deleting a movie
+
+
+DELETE  http://localhost:3001/api/movies/delete/1
