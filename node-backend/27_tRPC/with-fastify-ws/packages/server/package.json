@@ -1,0 +1,23 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "src/server.ts",
+  "author": "CrispenGari",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node-dev --respawn --transpile-only src/server.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.2.0",
+    "@fastify/websocket": "^7.1.2",
+    "@trpc/server": "^10.10.0",
+    "fastify": "^4.12.0",
+    "superjson": "^1.12.2",
+    "zod": "^3.20.2"
+  }
+}
