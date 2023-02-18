@@ -211,7 +211,7 @@ yarn add server@1.0.0
 After installing the `server` package on the mobile package we are then going to install the packages that we will need to setup our `tRPC` on the mobile package by running the following command:
 
 ```shell
-yarn add @trpc/client@next @trpc/server@next @trpc/react-query@next @tanstack/react-query
+yarn add @trpc/client @trpc/server @trpc/react-query @tanstack/react-query
 ```
 
 When we are done the we will need to create a folder in our `mobile` package called `src/utils` and create a file called `trpc.ts` and add the following code to it:
