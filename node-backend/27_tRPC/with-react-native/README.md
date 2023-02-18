@@ -310,24 +310,39 @@ export default App;
 
 Now we can start making queries and mutations from the `server` with `E2E` typescript safe procedure calling. Note that if you make the changes on the server you don't need to install the `server` package again on the client.
 
-In the `package.json` of the `mobile` you will need to point where `main` to `../../node_modules/expo/AppEntry.js`
+In the `package.json` of the `mobile` you will need to point where `main` to where `App.tsx` is located in my case it is will look as follows
 
 ```json
 {
   "name": "mobile",
   "version": "1.0.0",
-  "main": "../../node_modules/expo/AppEntry.js"
+  "main": "/App.tsx"
 }
 ```
 
-Then open the `node_modules/expo/AppEntry.js` file and add modify it so that it can point to where your `App.tsx` file is.
+Now in the `App.tsx` you will need to use `registerRootComponent` function and then pass in the component `App` instead of exporting default `App` as follows.
 
 ```ts
-// node_modules/expo/AppEntry.js
-import registerRootComponent from "expo/build/launch/registerRootComponent";
-import App from "../../packages/mobile/App";
 
-registerRootComponent(App);
+import {registerRootComponent} from 'expo'
+import { LogBox, View } from "react-native";
+import TRPCProvider from "./src/providers/TRPCProvider";
+import Routes from "./src/routes/Routes";
+
+LogBox.ignoreLogs;
+LogBox.ignoreAllLogs();
+const App = () => {
+  return (
+    <TRPCProvider>
+      <View style={{ flex: 1 }}>
+        <Routes />
+      </View>
+    </TRPCProvider>
+  );
+};
+
+
+registerRootComponent(App)
 ```
 
 ### Hello World

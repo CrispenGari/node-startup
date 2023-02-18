@@ -1,3 +1,5 @@
+
+import {registerRootComponent} from 'expo'
 import { LogBox, View } from "react-native";
 import TRPCProvider from "./src/providers/TRPCProvider";
 import Routes from "./src/routes/Routes";
@@ -14,4 +16,5 @@ const App = () => {
   );
 };
 
-export default App;
+
+registerRootComponent(App)
