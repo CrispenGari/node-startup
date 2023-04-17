@@ -1,8 +1,9 @@
 import express from "express";
 import { graphqlHTTP } from "express-graphql";
 import { GraphQLObjectType, GraphQLSchema, GraphQLString } from "graphql";
-
+import cors from "cors";
 const app = express();
+app.use(cors());
 const RootQuery = new GraphQLObjectType({
   name: "HelloWorld",
   fields: {
