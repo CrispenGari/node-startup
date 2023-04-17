@@ -51,7 +51,7 @@ cd packages/server
 Then after that you can now install the dependencies of the server package by running the following command:
 
 ```shell
-yarn add @trpc/server cors dotenv express zod supperjson
+yarn add @trpc/server cors dotenv express zod superjson
 ```
 
 Dev dependencies:
