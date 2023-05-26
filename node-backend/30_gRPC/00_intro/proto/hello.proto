@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package helloPackage;
+
+service Hello {
+    rpc hello(HelloRequest) returns (HelloResponse) {};
+    rpc randomNumber(NumberRequest) returns (stream NumberResponse) {};
+    rpc todos(stream TodoRequest) returns (TodoResponse) {};
+    rpc chat(stream ChatRequest) returns (stream ChatResponse) {};
+}
+message HelloRequest{
+    string message = 1;
+}
+message HelloResponse{
+    string message = 1;
+}
+message NumberRequest{
+    int32 maxVal = 1;
+}
+message NumberResponse{
+    int32 num = 1;
+}
+message TodoRequest{
+    string title = 1;
+    bool completed = 2;
+}
+
+message TodoResponse{
+    repeated TodoRequest todos = 1;
+}
+
+message ChatRequest {
+    string message = 1;
+}
+
+message ChatResponse {
+    string username = 1;
+    string message = 2;
+}
