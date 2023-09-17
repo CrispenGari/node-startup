@@ -2,6 +2,38 @@
 
 Redis is an open source (BSD licensed), in-memory data structure store, used as a database, cache, and message broker.
 
+### Installation
+
+This installation process is for someone who is using `Windows 10 (2004 or higher)`. The installation process can be found on the official documentation of [Redis.](https://redis.io/docs/getting-started/installation/install-redis-on-windows/)
+
+1. First you need to enable [WSL2 - Windows for Sub Linux](https://learn.microsoft.com/en-us/windows/wsl/install) by opening `Powershell` as an `Adim` and type the following command:
+
+```shell
+wsl --install
+```
+
+2. After that you need to restart your computer and come back to the steps that follows.
+3. Click the `Windows` button and search for the linux distribution that you want for example `"Ubuntu"` on Microsoft store. I will use the `Ubuntu 20.04.6 LTS`.
+4. Install that distribution and launch it.
+5. When you open it for the first time you will be prompted to enter the following:
+
+```shell
+Enter new UNIX username: [your-username]
+New password: [new-password]
+Retype new password: [retype-new-password]
+```
+
+6. Now we can go and install `Redis` using the command line by running the following command:
+
+```shell
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+sudo apt-get update
+sudo apt-get install redis
+```
+
 ### Redis basic commands
 
 Redis is an in-memory database that stored key value pairs. Not that in redis values are stored as strings.
